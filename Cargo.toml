@@ -1,0 +1,29 @@
+[workspace]
+resolver = "3"
+members = ["crates/*"]
+default-members = ["crates/*"]
+
+[workspace.package]
+license = "Apache-2.0"
+repository = "https://github.com/madnoberson/ratatui-recipes"
+edition = "2024"
+rust-version = "1.85.0"
+
+[package]
+name = "ratatui-recipes"
+version = "0.1.0"
+
+license.workspace = true
+repository.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[lib]
+
+[features]
+default = ["all-widgets"]
+all-widgets = ["small-spinner-widget"]
+small-spinner-widget = ["ratatui_small_spinner"]
+
+[dependencies]
+ratatui_small_spinner = { version = "0.1.0", path = "crates/small-spinner", optional = true }

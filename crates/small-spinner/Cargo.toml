@@ -1,0 +1,15 @@
+[package]
+name = "ratatui_small_spinner"
+version = "0.1.0"
+
+license.workspace = true
+repository.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[lib]
+
+[dependencies]
+ratatui = "0.29.*"
+derivative = "2.2.*"
+derive_builder = "0.20.*"
