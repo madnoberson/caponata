@@ -1,4 +1,5 @@
-use derivative::Derivative;
+use std::time::Instant;
+
 use ratatui::{
     buffer::Buffer,
     layout::{
@@ -10,8 +11,30 @@ use ratatui::{
 
 use super::{
     SmallSpinnerStyle,
-    symbol_cycle_by_spinner_type,
+    SymbolCycle,
 };
+
+/// Result of checking whether the widget can proceed with
+/// rendering its next or current symbol based on the time
+/// elapsed since the last update.
+enum RenderIntervalCheckResult {
+    /// The widget is being rendered for the first time;
+    /// no previous render timestamp is available;
+    /// the current symbol should be rendered.
+    FirstTime,
+
+    /// Enough time has passed since the last symbol was
+    /// rendered; the next symbol should now be rendered.
+    Ready,
+
+    /// Not enough time has passed since the last symbol
+    /// was rendered; the current symbol should be rendered
+    /// again.
+    TooSoon,
+
+    /// An error occurred while comparing timestamps.
+    ComparisonError,
+}
 
 /// A widget that displays single-character animated spinner.
 ///
@@ -19,15 +42,11 @@ use super::{
 /// that cycles through a sequence of symbols based on the provided
 /// [`SmallSpinnerStyle`].
 ///
-/// # Important
-///
-/// The `Clone` implementation creates a new spinner with the same
-/// style but resets the symbol cycle to the beginning, not preserving
-/// the current animation state.
-///
 /// # Example
 ///
 /// ```rust
+/// use std::time::Duration;
+///
 /// use ratatui::{
 ///     buffer::Buffer,
 ///     layout::{Alignment, Position, Rect},
@@ -42,6 +61,7 @@ use super::{
 ///
 /// let spinner_style = SmallSpinnerStyleBuilder::default()
 ///     .with_type(SmallSpinnerType::BrailleDouble)
+///     .with_interval(Duration::from_secs(0))
 ///     .with_alignment(Alignment::Right)
 ///     .with_foreground_color(Color::White)
 ///     .with_background_color(Color::Black)
@@ -82,25 +102,16 @@ use super::{
 /// let spinner_cell = buf.cell(spinner_cell_position).unwrap();
 /// assert_eq!(spinner_cell.symbol(), "⠘");
 /// ```
-#[derive(Derivative)]
-#[derivative(Debug, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct SmallSpinnerWidget {
-    #[derivative(Debug = "ignore", PartialEq = "ignore")]
-    symbol_cycle: Box<dyn Iterator<Item = &'static str>>,
+    symbol_cycle: SymbolCycle,
     style: SmallSpinnerStyle,
-}
 
-impl Default for SmallSpinnerWidget {
-    fn default() -> Self {
-        let style = SmallSpinnerStyle::default();
-        Self::new(style)
-    }
-}
-
-impl Clone for SmallSpinnerWidget {
-    fn clone(&self) -> Self {
-        Self::new(self.style)
-    }
+    /// Timestamp of the last rendering of the next
+    /// symbol. This field is not updated if the
+    /// current symbol being rendered, except the
+    /// first symbol in the cycle.
+    last_rendered_at: Option<Instant>,
 }
 
 impl Widget for &mut SmallSpinnerWidget {
@@ -108,6 +119,39 @@ impl Widget for &mut SmallSpinnerWidget {
         if area.height < 1 || area.width < 1 {
             return;
         }
+
+        let now = Instant::now();
+        let interval = self.style.interval;
+
+        let interval_check_result = match self.last_rendered_at {
+            Some(timestamp) => match timestamp.checked_add(interval) {
+                Some(min_timestamp) => {
+                    if now >= min_timestamp {
+                        RenderIntervalCheckResult::Ready
+                    } else {
+                        RenderIntervalCheckResult::TooSoon
+                    }
+                }
+                None => RenderIntervalCheckResult::ComparisonError,
+            },
+            None => RenderIntervalCheckResult::FirstTime,
+        };
+        let symbol_to_render = match interval_check_result {
+            RenderIntervalCheckResult::Ready => {
+                self.last_rendered_at = Some(now);
+                self.symbol_cycle.next_symbol()
+            }
+            RenderIntervalCheckResult::FirstTime => {
+                self.last_rendered_at = Some(now);
+                self.symbol_cycle.current_symbol()
+            }
+            RenderIntervalCheckResult::TooSoon => {
+                self.symbol_cycle.current_symbol()
+            }
+            RenderIntervalCheckResult::ComparisonError => {
+                self.symbol_cycle.current_symbol()
+            }
+        };
 
         let x = if area.width == 1 {
             area.x
@@ -118,10 +162,8 @@ impl Widget for &mut SmallSpinnerWidget {
                 Alignment::Right => area.x + area.width - 1,
             }
         };
-        let next_symbol = self.symbol_cycle.next().unwrap();
-
         buf[(x, area.y)]
-            .set_symbol(next_symbol)
+            .set_symbol(symbol_to_render)
             .set_bg(self.style.background_color)
             .set_fg(self.style.foreground_color);
     }
@@ -129,27 +171,26 @@ impl Widget for &mut SmallSpinnerWidget {
 
 impl SmallSpinnerWidget {
     pub fn new(style: SmallSpinnerStyle) -> Self {
-        let symbol_cycle = symbol_cycle_by_spinner_type(style.type_);
-        let symbol_cycle = Box::new(symbol_cycle);
-
         Self {
-            symbol_cycle,
+            symbol_cycle: SymbolCycle::new(style.type_),
             style,
+            last_rendered_at: None,
         }
     }
 
     /// Resets the spinner's animation to its initial state.
     ///
-    /// Restarts the spinner's symbol sequence according to its current
-    /// style, starting from the first symbol.
+    /// Restarts the spinner's symbol sequence according to its
+    /// current style, starting from the first symbol.
     pub fn reset(&mut self) {
-        let symbol_cycle = symbol_cycle_by_spinner_type(self.style.type_);
-        self.symbol_cycle = Box::new(symbol_cycle);
+        self.symbol_cycle.reset();
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use std::time::Duration;
+
     use ratatui::{
         buffer::Buffer,
         layout::{
@@ -170,6 +211,7 @@ mod tests {
     fn left_aligned_spinner() {
         let spinner_style = SmallSpinnerStyleBuilder::default()
             .with_type(SmallSpinnerType::BrailleDouble)
+            .with_interval(Duration::from_secs(0))
             .with_alignment(Alignment::Left)
             .build()
             .unwrap();
@@ -212,6 +254,7 @@ mod tests {
     fn center_aligned_spinner() {
         let spinner_style = SmallSpinnerStyleBuilder::default()
             .with_type(SmallSpinnerType::BrailleDouble)
+            .with_interval(Duration::from_secs(0))
             .with_alignment(Alignment::Center)
             .build()
             .unwrap();
@@ -254,6 +297,7 @@ mod tests {
     fn right_aligned_spinner() {
         let spinner_style = SmallSpinnerStyleBuilder::default()
             .with_type(SmallSpinnerType::BrailleDouble)
+            .with_interval(Duration::from_secs(0))
             .with_alignment(Alignment::Right)
             .build()
             .unwrap();

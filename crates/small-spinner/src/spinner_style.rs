@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use derive_builder::Builder;
 use ratatui::{
     layout::Alignment,
@@ -11,6 +13,8 @@ use super::SmallSpinnerType;
 /// # Example
 ///
 /// ```rust
+/// use std::time::Duration;
+///
 /// use ratatui::{
 ///     style::Color,
 ///     layout::Alignment,
@@ -22,6 +26,7 @@ use super::SmallSpinnerType;
 ///
 /// let style = SmallSpinnerStyleBuilder::default()
 ///     .with_type(SmallSpinnerType::BrailleDouble)
+///     .with_interval(Duration::from_millis(100))
 ///     .with_alignment(Alignment::Center)
 ///     .with_foreground_color(Color::White)
 ///     .with_background_color(Color::Black)
@@ -33,6 +38,9 @@ use super::SmallSpinnerType;
 pub struct SmallSpinnerStyle {
     #[builder(default, setter(name = "with_type"))]
     pub(crate) type_: SmallSpinnerType,
+
+    #[builder(default)]
+    pub(crate) interval: Duration,
 
     #[builder(default)]
     pub(crate) alignment: Alignment,

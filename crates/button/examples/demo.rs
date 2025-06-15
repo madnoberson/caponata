@@ -68,6 +68,7 @@ fn run(terminal: &mut DefaultTerminal) -> io::Result<()> {
 fn make_button() -> ButtonWidget<'static> {
     let spinner_style = SmallSpinnerStyleBuilder::default()
         .with_background_color(Color::Rgb(150, 0, 0))
+        .with_interval(Duration::from_millis(100))
         .build()
         .unwrap();
 

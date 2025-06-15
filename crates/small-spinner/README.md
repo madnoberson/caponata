@@ -7,6 +7,8 @@ A simple Ratatui widget for displaying a single-character animated spinner.
 Create and render a spinner with a custom style:
 
 ```rust
+use std::time::Duration;
+
 use ratatui::{
     buffer::Buffer,
     layout::{Alignment, Position, Rect},
@@ -21,6 +23,7 @@ use ratatui_small_spinner::{
 
 let spinner_style = SmallSpinnerStyleBuilder::default()
     .with_type(SmallSpinnerType::BrailleDouble)
+    .with_interval(Duration::from_millis(0))
     .with_alignment(Alignment::Right)
     .with_foreground_color(Color::White)
     .with_background_color(Color::Black)
