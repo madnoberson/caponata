@@ -45,6 +45,9 @@ impl<'a> From<ButtonStateStyle<'a>> for ThickButtonStyle<'a> {
     }
 }
 
+/// A button widget with visual thickness, rendered using
+/// three horizontal lines: a top line, a middle content line,
+/// and a bottom line.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct ThickButton<'a> {
     /// Symbol used to render the top line of

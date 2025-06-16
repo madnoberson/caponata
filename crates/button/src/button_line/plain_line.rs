@@ -33,6 +33,8 @@ impl<'a> From<ButtonLineStyle<'a>> for PlainLineStyle<'a> {
     }
 }
 
+/// A simple single-line widget that displays centered
+/// styled text.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct PlainLine<'a> {
     /// Instead of storing individual parameters for the

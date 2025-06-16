@@ -16,7 +16,7 @@ use super::{
     ButtonEvent,
     ButtonStatus,
     ButtonStyle,
-    StyledButton,
+    SizedButton,
 };
 
 /// A widget that displays button that can update its state
@@ -24,9 +24,9 @@ use super::{
 ///
 /// # Important
 ///
-/// If the provided area's height is greater than 3, the button
-/// will be rendered on the second line of the area; otherwise,
-/// it will be rendered on the first line.
+/// Renders the button on the second line if the area's
+/// height is 3 or more; otherwise, renders it on the
+/// first line.
 ///
 /// # Example
 ///
@@ -125,10 +125,10 @@ use super::{
 /// ```
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct ButtonWidget<'a> {
-    normal_button: StyledButton<'a>,
-    hovered_button: StyledButton<'a>,
-    pressed_button: StyledButton<'a>,
-    disabled_button: StyledButton<'a>,
+    normal_button: SizedButton<'a>,
+    hovered_button: SizedButton<'a>,
+    pressed_button: SizedButton<'a>,
+    disabled_button: SizedButton<'a>,
     status: ButtonStatus,
 }
 
@@ -146,10 +146,10 @@ impl<'a> Widget for &mut ButtonWidget<'a> {
 impl<'a> ButtonWidget<'a> {
     pub fn new(style: ButtonStyle<'a>) -> Self {
         Self {
-            normal_button: StyledButton::new(style.normal_style),
-            hovered_button: StyledButton::new(style.hovered_style),
-            pressed_button: StyledButton::new(style.pressed_style),
-            disabled_button: StyledButton::new(style.disabled_style),
+            normal_button: SizedButton::new(style.normal_style),
+            hovered_button: SizedButton::new(style.hovered_style),
+            pressed_button: SizedButton::new(style.pressed_style),
+            disabled_button: SizedButton::new(style.disabled_style),
             status: ButtonStatus::Normal,
         }
     }

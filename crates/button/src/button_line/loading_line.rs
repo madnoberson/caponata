@@ -40,6 +40,8 @@ impl<'a> From<ButtonLineStyle<'a>> for LoadingLineStyle<'a> {
     }
 }
 
+/// A single-line widget that displays centered text with
+/// an optional loading spinner.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct LoadingLine<'a> {
     spinner: SmallSpinnerWidget,

@@ -37,6 +37,8 @@ impl<'a> From<ButtonStateStyle<'a>> for ThinButtonStyle<'a> {
     }
 }
 
+/// A minimal button widget rendered using a single
+/// horizontal line.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub(crate) struct ThinButton<'a> {
     line: ButtonLine<'a>,

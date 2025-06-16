@@ -14,27 +14,27 @@ use super::{
 use crate::ButtonStateStyle;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum StyledButton<'a> {
+pub(crate) enum SizedButton<'a> {
     Thick(ThickButton<'a>),
     Thin(ThinButton<'a>),
 }
 
-impl<'a> Default for StyledButton<'a> {
+impl<'a> Default for SizedButton<'a> {
     fn default() -> Self {
         Self::Thin(ThinButton::default())
     }
 }
 
-impl<'a> Widget for &mut StyledButton<'a> {
+impl<'a> Widget for &mut SizedButton<'a> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         match self {
-            StyledButton::Thick(button) => button.render(area, buf),
-            StyledButton::Thin(button) => button.render(area, buf),
+            SizedButton::Thick(button) => button.render(area, buf),
+            SizedButton::Thin(button) => button.render(area, buf),
         };
     }
 }
 
-impl<'a> StyledButton<'a> {
+impl<'a> SizedButton<'a> {
     pub fn new(style: ButtonStateStyle<'a>) -> Self {
         match style.thickness {
             Some(_) => Self::Thick(ThickButton::new(style)),
@@ -47,8 +47,8 @@ impl<'a> StyledButton<'a> {
     /// provided area.
     pub fn contains(&self, area: Rect, position: Position) -> bool {
         match self {
-            StyledButton::Thick(button) => button.contains(area, position),
-            StyledButton::Thin(button) => button.contains(area, position),
+            SizedButton::Thick(button) => button.contains(area, position),
+            SizedButton::Thin(button) => button.contains(area, position),
         }
     }
 
@@ -56,8 +56,8 @@ impl<'a> StyledButton<'a> {
     /// does nothing.
     pub fn enable_spinner(&mut self) {
         match self {
-            StyledButton::Thick(button) => button.enable_spinner(),
-            StyledButton::Thin(button) => button.enable_spinner(),
+            SizedButton::Thick(button) => button.enable_spinner(),
+            SizedButton::Thin(button) => button.enable_spinner(),
         }
     }
 
@@ -65,8 +65,8 @@ impl<'a> StyledButton<'a> {
     /// does nothing.
     pub fn disable_spinner(&mut self) {
         match self {
-            StyledButton::Thick(button) => button.disable_spinner(),
-            StyledButton::Thin(button) => button.disable_spinner(),
+            SizedButton::Thick(button) => button.disable_spinner(),
+            SizedButton::Thin(button) => button.disable_spinner(),
         }
     }
 }
