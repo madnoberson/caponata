@@ -38,10 +38,6 @@ enum RenderIntervalCheckResult {
 
 /// A widget that displays single-character animated spinner.
 ///
-/// The [`SmallSpinnerWidget`] renders a single-character spinner
-/// that cycles through a sequence of symbols based on the provided
-/// [`SmallSpinnerStyle`].
-///
 /// # Example
 ///
 /// ```rust
@@ -145,10 +141,8 @@ impl Widget for &mut SmallSpinnerWidget {
                 self.last_rendered_at = Some(now);
                 self.symbol_cycle.current_symbol()
             }
-            RenderIntervalCheckResult::TooSoon => {
-                self.symbol_cycle.current_symbol()
-            }
-            RenderIntervalCheckResult::ComparisonError => {
+            RenderIntervalCheckResult::TooSoon
+            | RenderIntervalCheckResult::ComparisonError => {
                 self.symbol_cycle.current_symbol()
             }
         };
