@@ -173,9 +173,6 @@ impl SmallSpinnerWidget {
     }
 
     /// Resets the spinner's animation to its initial state.
-    ///
-    /// Restarts the spinner's symbol sequence according to its
-    /// current style, starting from the first symbol.
     pub fn reset(&mut self) {
         self.symbol_cycle.reset();
     }
