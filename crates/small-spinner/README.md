@@ -1,6 +1,12 @@
-# Ratatui Small Spinner 
+# Ratatui Small Spinner
 
 A simple Ratatui widget for displaying a single-character animated spinner.
+
+## Run Example
+
+```bash
+cargo run --example showcase --features crossterm
+```
 
 ## Usage
 
@@ -30,36 +36,6 @@ let spinner_style = SmallSpinnerStyleBuilder::default()
     .build()
     .unwrap();
 let mut spinner = SmallSpinnerWidget::new(spinner_style);
-
-let area = Rect::new(0, 0, 5, 1);
-let mut buf = Buffer::empty(area);
-let spinner_cell_position = Position::new(4, 0);
-
-spinner.render(area, &mut buf);
-let spinner_cell = buf.cell(spinner_cell_position).unwrap();
-assert_eq!(spinner_cell.symbol(), "⠘");
-
-spinner.render(area, &mut buf);
-let spinner_cell = buf.cell(spinner_cell_position).unwrap();
-assert_eq!(spinner_cell.symbol(), "⠰");
-
-spinner.render(area, &mut buf);
-let spinner_cell = buf.cell(spinner_cell_position).unwrap();
-assert_eq!(spinner_cell.symbol(), "⠤");
-
-spinner.render(area, &mut buf);
-let spinner_cell = buf.cell(spinner_cell_position).unwrap();
-assert_eq!(spinner_cell.symbol(), "⠆");
-
-spinner.render(area, &mut buf);
-let spinner_cell = buf.cell(spinner_cell_position).unwrap();
-assert_eq!(spinner_cell.symbol(), "⠃");
-
-spinner.render(area, &mut buf);
-let spinner_cell = buf.cell(spinner_cell_position).unwrap();
-assert_eq!(spinner_cell.symbol(), "⠉");
-
-spinner.render(area, &mut buf);
-let spinner_cell = buf.cell(spinner_cell_position).unwrap();
-assert_eq!(spinner_cell.symbol(), "⠘");
 ```
+
+On each `render` call, the spinner moves to the next character in its sequence. Increasing the interval slows down the update rate, creating smoother animation.

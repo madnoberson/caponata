@@ -22,8 +22,78 @@ impl Default for SymbolCycle {
 impl SymbolCycle {
     pub fn new(spinner_type: SmallSpinnerType) -> Self {
         let symbols = match spinner_type {
+            SmallSpinnerType::Ascii => {
+                vec!["|", "/", "-", "\\"]
+            }
+            SmallSpinnerType::BoxDrawing => {
+                vec!["│", "╱", "─", "╲"]
+            }
+            SmallSpinnerType::Arrow => {
+                vec!["↑", "↗", "→", "↘", "↓", "↙", "←", "↖"]
+            }
+            SmallSpinnerType::DoubleArrow => {
+                vec!["⇑", "⇗", "⇒", "⇘", "⇓", "⇙", "⇐", "⇖"]
+            }
+            SmallSpinnerType::QuadrantBlock => {
+                vec!["▝", "▗", "▖", "▘"]
+            }
+            SmallSpinnerType::QuadrantBlockCrack => {
+                vec!["▙", "▛", "▜", "▟"]
+            }
+            SmallSpinnerType::VerticalBlock => {
+                vec!["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"]
+            }
+            SmallSpinnerType::HorizontalBlock => {
+                vec!["▏", "▎", "▍", "▌", "▋", "▊", "▉", "█"]
+            }
+            SmallSpinnerType::WhiteSquare => {
+                vec!["◳", "◲", "◱", "◰"]
+            }
+            SmallSpinnerType::WhiteCircle => {
+                vec!["◷", "◶", "◵", "◴"]
+            }
+            SmallSpinnerType::BlackCircle => {
+                vec!["◑", "◒", "◐", "◓"]
+            }
+            SmallSpinnerType::Clock => {
+                vec![
+                    "🕛", "🕧", "🕐", "🕜", "🕑", "🕝", "🕒", "🕞", "🕓",
+                    "🕟", "🕔", "🕠", "🕕", "🕡", "🕖", "🕢", "🕗", "🕣",
+                    "🕘", "🕤", "🕙", "🕥", "🕚", "🕦",
+                ]
+            }
+            SmallSpinnerType::BrailleOne => {
+                vec!["⠈", "⠐", "⠠", "⠄", "⠂", "⠁"]
+            }
             SmallSpinnerType::BrailleDouble => {
                 vec!["⠘", "⠰", "⠤", "⠆", "⠃", "⠉"]
+            }
+            SmallSpinnerType::BrailleSix => {
+                vec!["⠷", "⠯", "⠟", "⠻", "⠽", "⠾"]
+            }
+            SmallSpinnerType::BrailleSixDouble => {
+                vec!["⠷", "⠯", "⠟", "⠻", "⠽", "⠾"]
+            }
+            SmallSpinnerType::BrailleEight => {
+                vec!["⣷", "⣯", "⣟", "⡿", "⢿", "⣻", "⣽", "⣾"]
+            }
+            SmallSpinnerType::BrailleEightDouble => {
+                vec!["⣧", "⣏", "⡟", "⠿", "⢻", "⣹", "⣼", "⣶"]
+            }
+            SmallSpinnerType::OghamA => {
+                vec![" ", "ᚐ", "ᚑ", "ᚒ", "ᚓ", "ᚔ"]
+            }
+            SmallSpinnerType::OghamB => {
+                vec![" ", "ᚁ", "ᚂ", "ᚃ", "ᚄ", "ᚅ"]
+            }
+            SmallSpinnerType::OghamC => {
+                vec![" ", "ᚆ", "ᚇ", "ᚈ", "ᚉ", "ᚊ"]
+            }
+            SmallSpinnerType::Parenthesis => {
+                vec!["⎛", "⎜", "⎝", "⎞", "⎟", "⎠"]
+            }
+            SmallSpinnerType::Canadian => {
+                vec!["ᔐ", "ᯇ", "ᔑ", "ᯇ"]
             }
         };
         let max_index = symbols.clone().len() - 1;
@@ -36,16 +106,11 @@ impl SymbolCycle {
     }
 
     /// Returns the currently selected symbol in the cycle.
-    ///
-    /// This does not modify the internal state of the cycle.
     pub fn current_symbol(&self) -> &'static str {
         self.symbols[self.current_index]
     }
 
     /// Advances to the next symbol in the cycle and returns it.
-    ///
-    /// If the current symbol is the last one, it wraps around
-    /// to the first.
     pub fn next_symbol(&mut self) -> &'static str {
         if self.current_index != self.max_index {
             self.current_index += 1;

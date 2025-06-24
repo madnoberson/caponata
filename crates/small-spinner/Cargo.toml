@@ -12,3 +12,14 @@ rust-version.workspace = true
 [dependencies]
 ratatui = "0.29.*"
 derive_builder = "0.20.*"
+crossterm = { version = "0.29.*", optional = true }
+
+[features]
+default = []
+
+# We use crossterm only for the 'showcase' example.
+crossterm = ["dep:crossterm", "ratatui/crossterm"]
+
+[[example]]
+name = "showcase"
+required-features = ["crossterm"]
