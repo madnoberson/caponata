@@ -46,6 +46,9 @@ impl SymbolCycle {
             SmallSpinnerType::HorizontalBlock => {
                 vec!["▏", "▎", "▍", "▌", "▋", "▊", "▉", "█"]
             }
+            SmallSpinnerType::TriangleCorners => {
+                vec!["◢", "◣", "◤", "◥"]
+            }
             SmallSpinnerType::WhiteSquare => {
                 vec!["◳", "◲", "◱", "◰"]
             }
@@ -61,6 +64,9 @@ impl SymbolCycle {
                     "🕟", "🕔", "🕠", "🕕", "🕡", "🕖", "🕢", "🕗", "🕣",
                     "🕘", "🕤", "🕙", "🕥", "🕚", "🕦",
                 ]
+            }
+            SmallSpinnerType::MoonPhases => {
+                vec!["🌑", "🌒", "🌓", "🌕", "🌖"]
             }
             SmallSpinnerType::BrailleOne => {
                 vec!["⠈", "⠐", "⠠", "⠄", "⠂", "⠁"]

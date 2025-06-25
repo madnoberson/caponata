@@ -30,7 +30,7 @@ pub fn main() -> io::Result<()> {
 
 fn run(terminal: &mut DefaultTerminal) -> io::Result<()> {
     let spinner_style = SmallSpinnerStyleBuilder::default()
-        .with_type(SmallSpinnerType::BlackCircle)
+        .with_type(SmallSpinnerType::TriangleCorners)
         .with_alignment(Alignment::Left)
         .with_foreground_color(Color::White)
         .with_interval(Duration::from_millis(100))
