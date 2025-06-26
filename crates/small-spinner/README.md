@@ -5,7 +5,7 @@ A simple Ratatui widget for displaying a single-character animated spinner.
 ## Run Example
 
 ```bash
-cargo run --example showcase --features crossterm
+cargo run --example showcase --features showcase
 ```
 
 ## Usage
