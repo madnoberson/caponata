@@ -14,7 +14,7 @@ use super::{
     SymbolCycle,
 };
 
-/// Result of checking whether the widget can proceed with
+/// A result of checking whether the widget can proceed with
 /// rendering its next or current symbol based on the time
 /// elapsed since the last update.
 enum RenderIntervalCheckResult {
@@ -103,7 +103,7 @@ pub struct SmallSpinnerWidget {
     symbol_cycle: SymbolCycle,
     style: SmallSpinnerStyle,
 
-    /// Timestamp of the last rendering of the next
+    /// A timestamp of the last rendering of the next
     /// symbol. This field is not updated if the
     /// current symbol being rendered, except the
     /// first symbol in the cycle.

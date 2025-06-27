@@ -97,7 +97,7 @@ pub enum SmallSpinnerType {
     Canadian,
 }
 
-/// Styling configuration for [`SmallSpinnerWidget`].
+/// A styling configuration for [`SmallSpinnerWidget`].
 ///
 /// # Example
 ///
