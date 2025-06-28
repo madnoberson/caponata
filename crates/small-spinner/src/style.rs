@@ -13,7 +13,9 @@ use strum_macros::{
 /// Type of animation for [`SmallSpinnerWidget`].
 ///
 /// Default variant is [`SmallSpinnerType::BrailleDouble`].
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, AsRefStr, EnumIter)]
+#[derive(
+    Debug, Default, Clone, Copy, PartialEq, Eq, Hash, AsRefStr, EnumIter,
+)]
 #[strum(serialize_all = "snake_case")]
 #[non_exhaustive]
 pub enum SmallSpinnerType {
@@ -122,7 +124,7 @@ pub enum SmallSpinnerType {
 ///     .build()
 ///     .unwrap();
 /// ```
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Builder)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash, Builder)]
 #[builder(setter(prefix = "with", into))]
 pub struct SmallSpinnerStyle {
     #[builder(default, setter(name = "with_type"))]
