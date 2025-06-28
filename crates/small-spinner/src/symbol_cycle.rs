@@ -9,7 +9,6 @@ use super::SmallSpinnerType;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct SymbolCycle {
     symbols: Vec<&'static str>,
-    max_index: usize,
     current_index: usize,
 }
 
@@ -102,11 +101,9 @@ impl SymbolCycle {
                 vec!["ᔐ", "ᯇ", "ᔑ", "ᯇ"]
             }
         };
-        let max_index = symbols.clone().len() - 1;
 
         Self {
             symbols,
-            max_index,
             current_index: 0,
         }
     }
@@ -118,7 +115,7 @@ impl SymbolCycle {
 
     /// Advances to the next symbol in the cycle and returns it.
     pub fn next_symbol(&mut self) -> &'static str {
-        if self.current_index != self.max_index {
+        if self.current_index != self.symbols.len() - 1 {
             self.current_index += 1;
         } else {
             self.current_index = 0;
