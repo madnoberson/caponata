@@ -5,6 +5,7 @@ use ratatui::{
     layout::Alignment,
     style::Color,
 };
+#[cfg(feature = "strum")]
 use strum_macros::{
     AsRefStr,
     EnumIter,
@@ -13,10 +14,9 @@ use strum_macros::{
 /// Type of animation for [`SmallSpinnerWidget`].
 ///
 /// Default variant is [`SmallSpinnerType::BrailleDouble`].
-#[derive(
-    Debug, Default, Clone, Copy, PartialEq, Eq, Hash, AsRefStr, EnumIter,
-)]
-#[strum(serialize_all = "snake_case")]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "strum", derive(AsRefStr, EnumIter))]
+#[cfg_attr(feature = "strum", strum(serialize_all = "snake_case"))]
 #[non_exhaustive]
 pub enum SmallSpinnerType {
     /// ["|", "/", "-", "\\"]

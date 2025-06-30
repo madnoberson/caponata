@@ -10,15 +10,16 @@ rust-version.workspace = true
 [lib]
 
 [dependencies]
-strum = "0.27.*"
 strum_macros = "0.27.*"
 ratatui = "0.29.*"
 derive_builder = "0.20.*"
+strum = { version = "0.27.*", optional = true }
 crossterm = { version = "0.29.*", optional = true }
 
 [features]
 default = []
-showcase = ["dep:crossterm", "ratatui/crossterm"]
+strum = ["dep:strum"]
+showcase = ["dep:crossterm", "strum", "ratatui/crossterm"]
 
 [[example]]
 name = "showcase"
