@@ -31,9 +31,6 @@ enum RenderIntervalCheckResult {
     /// was rendered; the current symbol should be rendered
     /// again.
     TooSoon,
-
-    /// An error occurred while comparing timestamps.
-    ComparisonError,
 }
 
 /// A widget that displays single-character animated spinner.
@@ -120,16 +117,13 @@ impl Widget for &mut SmallSpinnerWidget {
         let interval = self.style.interval;
 
         let interval_check_result = match self.last_rendered_at {
-            Some(timestamp) => match timestamp.checked_add(interval) {
-                Some(min_timestamp) => {
-                    if now >= min_timestamp {
-                        RenderIntervalCheckResult::Ready
-                    } else {
-                        RenderIntervalCheckResult::TooSoon
-                    }
+            Some(last_rendered_at) => {
+                if now.duration_since(last_rendered_at) >= interval {
+                    RenderIntervalCheckResult::Ready
+                } else {
+                    RenderIntervalCheckResult::TooSoon
                 }
-                None => RenderIntervalCheckResult::ComparisonError,
-            },
+            }
             None => RenderIntervalCheckResult::FirstTime,
         };
         let symbol_to_render = match interval_check_result {
@@ -141,8 +135,7 @@ impl Widget for &mut SmallSpinnerWidget {
                 self.last_rendered_at = Some(now);
                 self.symbol_cycle.current_symbol()
             }
-            RenderIntervalCheckResult::TooSoon
-            | RenderIntervalCheckResult::ComparisonError => {
+            RenderIntervalCheckResult::TooSoon => {
                 self.symbol_cycle.current_symbol()
             }
         };
