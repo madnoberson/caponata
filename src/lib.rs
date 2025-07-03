@@ -8,4 +8,4 @@ pub use ratatui_button as button;
 
 #[cfg(feature = "small-text-widget")]
 #[doc(inline)]
-pub use ratatui_small_text as text;
+pub use ratatui_small_text as small_text;
