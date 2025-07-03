@@ -17,7 +17,34 @@ use crate::{
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum SymbolState {
     Styled(SymbolStyle),
+    Untouched,
+}
+
+#[derive(Clone, Copy)]
+enum StepSymbolState {
+    Styled(SymbolStyle),
     Untouched(Option<SymbolStyle>),
+}
+
+impl From<SymbolState> for StepSymbolState {
+    fn from(value: SymbolState) -> Self {
+        match value {
+            SymbolState::Styled(style) => {
+                StepSymbolState::Untouched(style.into())
+            }
+            SymbolState::Untouched => StepSymbolState::Untouched(None),
+        }
+    }
+}
+
+impl Into<SymbolState> for StepSymbolState {
+    fn into(self) -> SymbolState {
+        match self {
+            Self::Styled(style) => SymbolState::Styled(style),
+            Self::Untouched(Some(style)) => SymbolState::Styled(style),
+            Self::Untouched(None) => SymbolState::Untouched,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -50,7 +77,7 @@ impl Animation {
             style.advance_mode,
         );
         let symbol_states: HashMap<u16, SymbolState> = (0..text_char_count)
-            .map(|x| (x, SymbolState::Untouched(None)))
+            .map(|x| (x, SymbolState::Untouched))
             .collect();
 
         Self {
@@ -122,65 +149,72 @@ impl Animation {
             .symbol_states
             .iter()
             .filter_map(|(&x, state)| match state {
-                SymbolState::Styled(style)
-                | SymbolState::Untouched(Some(style)) => (x, *style).into(),
-                SymbolState::Untouched(None) => None,
+                SymbolState::Styled(style) => (x, *style).into(),
+                SymbolState::Untouched => None,
             })
             .collect();
 
         AnimationFrame { symbol_styles }
     }
-}
 
-impl Animation {
     fn apply_styles(
         &mut self,
         symbol_styles: Vec<(AnimationTargetedSymbols, SymbolStyle)>,
     ) {
+        let mut step_states: HashMap<u16, StepSymbolState> = self
+            .symbol_states
+            .clone()
+            .into_iter()
+            .map(|(x, state)| (x, state.into()))
+            .collect();
+
         for (target, style) in symbol_styles {
-            let step_state = SymbolState::Styled(style);
+            let step_state = StepSymbolState::Styled(style);
 
             match target {
                 AnimationTargetedSymbols::Single(x) => {
-                    self.symbol_states.insert(x, step_state);
+                    step_states.insert(x, step_state);
                 }
                 AnimationTargetedSymbols::Range(start, end) => {
                     for x in start..=end {
-                        self.symbol_states.insert(x, step_state);
+                        step_states.insert(x, step_state);
                     }
                 }
                 AnimationTargetedSymbols::Untouched => {
-                    let untouched_state_xs: Vec<u16> = self
-                        .symbol_states
+                    let untouched_state_xs: Vec<u16> = step_states
                         .iter()
                         .filter(|(_, step)| {
-                            matches!(step, SymbolState::Untouched(None))
+                            matches!(step, StepSymbolState::Untouched(None))
                         })
                         .map(|(x, _)| x)
                         .copied()
                         .collect();
 
                     for x in untouched_state_xs {
-                        self.symbol_states.insert(x, step_state);
+                        step_states.insert(x, step_state);
                     }
                 }
                 AnimationTargetedSymbols::UntouchedThisStep => {
-                    let untouched_state_xs: Vec<u16> = self
-                        .symbol_states
+                    let untouched_state_xs: Vec<u16> = step_states
                         .iter()
                         .filter(|(_, step)| {
-                            matches!(step, SymbolState::Untouched(_))
+                            matches!(step, StepSymbolState::Untouched(_))
                         })
                         .map(|(x, _)| x)
                         .copied()
                         .collect();
 
                     for x in untouched_state_xs {
-                        self.symbol_states.insert(x, step_state);
+                        step_states.insert(x, step_state);
                     }
                 }
             }
         }
+
+        self.symbol_states = step_states
+            .into_iter()
+            .map(|(x, state)| (x, state.into()))
+            .collect();
     }
 }
 
