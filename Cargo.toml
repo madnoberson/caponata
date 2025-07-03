@@ -22,10 +22,12 @@ rust-version.workspace = true
 
 [features]
 default = ["all-widgets"]
-all-widgets = ["small-spinner-widget", "button-widget"]
+all-widgets = ["small-spinner-widget", "small-text-widget", "button-widget"]
 small-spinner-widget = ["ratatui_small_spinner"]
+small-text-widget = ["ratatui_small_text"]
 button-widget = ["ratatui_button"]
 
 [dependencies]
 ratatui_small_spinner = { version = "0.1.0", path = "crates/small-spinner", optional = true }
+ratatui_small_text = { version = "0.1.0", path = "crates/small-text", optional = true }
 ratatui_button = { version = "0.1.0", path = "crates/button", optional = true }

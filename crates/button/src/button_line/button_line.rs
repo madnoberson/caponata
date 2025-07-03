@@ -50,8 +50,6 @@ impl<'a> From<ThinButtonStyle<'a>> for ButtonLineStyle<'a> {
     }
 }
 
-/// A single-line button content abstraction that may
-/// include a loading spinner.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum ButtonLine<'a> {
     Plain(PlainLine<'a>),
