@@ -47,6 +47,16 @@ impl Into<SymbolState> for StepSymbolState {
     }
 }
 
+impl StepSymbolState {
+    fn merge_symbol_style(&mut self, style: SymbolStyle) {
+        match self {
+            Self::Styled(old_style) => old_style.merge(style),
+            Self::Untouched(Some(old_style)) => old_style.merge(style),
+            Self::Untouched(None) => {}
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct AnimationFrame {
     pub(crate) symbol_styles: HashMap<u16, SymbolStyle>,
@@ -169,14 +179,35 @@ impl Animation {
             .collect();
 
         for (target, style) in symbol_styles {
-            let step_state = StepSymbolState::Styled(style);
-
             match target {
                 AnimationTargetedSymbols::Single(x) => {
+                    let step_state =
+                        if let Some(state) = step_states.get_mut(&x) {
+                            if let StepSymbolState::Untouched(None) = state {
+                                StepSymbolState::Styled(style)
+                            } else {
+                                state.merge_symbol_style(style);
+                                *state
+                            }
+                        } else {
+                            StepSymbolState::Styled(style)
+                        };
                     step_states.insert(x, step_state);
                 }
                 AnimationTargetedSymbols::Range(start, end) => {
                     for x in start..=end {
+                        let step_state = if let Some(state) =
+                            step_states.get_mut(&x)
+                        {
+                            if let StepSymbolState::Untouched(None) = state {
+                                StepSymbolState::Styled(style)
+                            } else {
+                                state.merge_symbol_style(style);
+                                *state
+                            }
+                        } else {
+                            StepSymbolState::Styled(style)
+                        };
                         step_states.insert(x, step_state);
                     }
                 }
@@ -191,6 +222,18 @@ impl Animation {
                         .collect();
 
                     for x in untouched_state_xs {
+                        let step_state = if let Some(state) =
+                            step_states.get_mut(&x)
+                        {
+                            if let StepSymbolState::Untouched(None) = state {
+                                StepSymbolState::Styled(style)
+                            } else {
+                                state.merge_symbol_style(style);
+                                *state
+                            }
+                        } else {
+                            StepSymbolState::Styled(style)
+                        };
                         step_states.insert(x, step_state);
                     }
                 }
@@ -205,6 +248,19 @@ impl Animation {
                         .collect();
 
                     for x in untouched_state_xs {
+                        let step_state = if let Some(state) =
+                            step_states.get_mut(&x)
+                        {
+                            if let StepSymbolState::Untouched(None) = state {
+                                StepSymbolState::Styled(style)
+                            } else {
+                                state.merge_symbol_style(style);
+                                *state
+                            }
+                        } else {
+                            StepSymbolState::Styled(style)
+                        };
+
                         step_states.insert(x, step_state);
                     }
                 }
