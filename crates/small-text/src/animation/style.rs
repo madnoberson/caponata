@@ -15,15 +15,15 @@ use ratatui::style::{
 ///
 /// Priority of applying:
 ///
-/// 1. [`AnimationTargetedSymbols::Single`]
-/// 2. [`AnimationTargetedSymbols::Range`]
-/// 3. [`AnimationTargetedSymbols::Untouched`]
-/// 4. [`AnimationTargetedSymbols::UntouchedThisStep`]
+/// 1. [`AnimationTarget::Single`]
+/// 2. [`AnimationTarget::Range`]
+/// 3. [`AnimationTarget::Untouched`]
+/// 4. [`AnimationTarget::UntouchedThisStep`]
 ///
-/// Default variant is [`AnimationTargetedSymbols::Untouched`].
+/// Default variant is [`AnimationTarget::Untouched`].
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 #[non_exhaustive]
-pub enum AnimationTargetedSymbols {
+pub enum AnimationTarget {
     /// A specific position of a single symbol. This
     /// is a virtual X coordinate representing the
     /// offset from the beginning of the text.
@@ -67,7 +67,7 @@ pub enum AnimationAction {
 /// };
 ///
 /// use ratatui_small_text::{
-///     AnimationTargetedSymbols,
+///     AnimationTarget,
 ///     AnimationStepBuilder,
 ///     SymbolStyle,
 /// };
@@ -87,8 +87,7 @@ pub struct AnimationStep {
     /// A map from the selections of the symbol positions
     /// to the actions that applied to them.
     #[builder(default)]
-    pub(crate) actions:
-        HashMap<AnimationTargetedSymbols, Vec<AnimationAction>>,
+    pub(crate) actions: HashMap<AnimationTarget, Vec<AnimationAction>>,
 
     /// The duration of this animation step. Once this
     /// time elapses, the animation advances to the next
@@ -146,7 +145,7 @@ pub enum AnimationAdvanceMode {
 /// };
 ///
 /// use ratatui_small_text::{
-///     AnimationTargetedSymbols,
+///     AnimationTarget,
 ///     SymbolStyle,
 ///     AnimationRepeatMode,
 ///     AnimationAdvanceMode,
@@ -155,7 +154,7 @@ pub enum AnimationAdvanceMode {
 /// };
 ///
 /// let first_step_symbol_styles = HashMap::from([
-///     (AnimationTargetedSymbols::Single(0), SymbolStyle::default()),
+///     (AnimationTarget::Single(0), SymbolStyle::default()),
 /// ]);
 /// let first_step = AnimationStepBuilder::default()
 ///     .with_symbol_styles(first_step_symbol_styles)
@@ -163,7 +162,7 @@ pub enum AnimationAdvanceMode {
 ///     .build()
 ///     .unwrap();
 /// let second_step_symbol_styles = HashMap::from([
-///     (AnimationTargetedSymbols::Untouched, SymbolStyle::default()),
+///     (AnimationTarget::Untouched, SymbolStyle::default()),
 /// ]);
 /// let second_step = AnimationStepBuilder::default()
 ///     .with_symbol_styles(second_step_symbol_styles)

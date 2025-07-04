@@ -11,7 +11,7 @@ use super::{
     AnimationAction,
     AnimationStep,
     AnimationStyle,
-    AnimationTargetedSymbols,
+    AnimationTarget,
 };
 use crate::SymbolStyle;
 
@@ -164,15 +164,14 @@ impl Animation {
             .into_iter()
             .map(|(x, state)| (x, state.into()))
             .collect();
-        let mut actions: Vec<(
-            AnimationTargetedSymbols,
-            Vec<AnimationAction>,
-        )> = step.actions.into_iter().collect();
-        actions.sort_by(|a, b| targeted_symbols_sorter(a.0, b.0));
+
+        let mut actions: Vec<(AnimationTarget, Vec<AnimationAction>)> =
+            step.actions.into_iter().collect();
+        actions.sort_by(|a, b| targets_sorter(a.0, b.0));
 
         for (target, actions) in actions {
-            let xs = self.xs_by_targeted_symbols(target, &step_states);
-            self.execute_actions(xs, &mut step_states, actions);
+            let x_coords = self.calculate_x_coords(target, &step_states);
+            self.execute_actions(x_coords, &mut step_states, actions);
         }
 
         self.symbol_states = step_states
@@ -194,17 +193,15 @@ impl Animation {
         AnimationFrame { symbol_styles }
     }
 
-    fn xs_by_targeted_symbols(
+    fn calculate_x_coords(
         &self,
-        target: AnimationTargetedSymbols,
+        target: AnimationTarget,
         step_states: &HashMap<u16, StepSymbolState>,
     ) -> Vec<u16> {
         match target {
-            AnimationTargetedSymbols::Single(x) => vec![x],
-            AnimationTargetedSymbols::Range(start, end) => {
-                (start..=end).collect()
-            }
-            AnimationTargetedSymbols::Untouched => step_states
+            AnimationTarget::Single(x) => vec![x],
+            AnimationTarget::Range(start, end) => (start..=end).collect(),
+            AnimationTarget::Untouched => step_states
                 .iter()
                 .filter(|(_, step)| {
                     matches!(step, StepSymbolState::Untouched(None))
@@ -212,7 +209,7 @@ impl Animation {
                 .map(|(x, _)| x)
                 .copied()
                 .collect(),
-            AnimationTargetedSymbols::UntouchedThisStep => step_states
+            AnimationTarget::UntouchedThisStep => step_states
                 .iter()
                 .filter(|(_, step)| {
                     matches!(step, StepSymbolState::Untouched(_))
@@ -225,11 +222,11 @@ impl Animation {
 
     fn execute_actions(
         &self,
-        xs: Vec<u16>,
+        x_coords: Vec<u16>,
         step_states: &mut HashMap<u16, StepSymbolState>,
         actions: Vec<AnimationAction>,
     ) {
-        for x in xs {
+        for x in x_coords {
             let step_state = if let Some(state) = step_states.get(&x) {
                 let mut style = match state {
                     StepSymbolState::Styled(style) => *style,
@@ -279,15 +276,12 @@ impl Animation {
     }
 }
 
-fn targeted_symbols_sorter(
-    a: AnimationTargetedSymbols,
-    b: AnimationTargetedSymbols,
-) -> Ordering {
-    let priority = |item: &AnimationTargetedSymbols| match item {
-        AnimationTargetedSymbols::Single(_) => 3,
-        AnimationTargetedSymbols::Range(_, _) => 2,
-        AnimationTargetedSymbols::Untouched => 1,
-        AnimationTargetedSymbols::UntouchedThisStep => 0,
+fn targets_sorter(a: AnimationTarget, b: AnimationTarget) -> Ordering {
+    let priority = |item: &AnimationTarget| match item {
+        AnimationTarget::Single(_) => 3,
+        AnimationTarget::Range(_, _) => 2,
+        AnimationTarget::Untouched => 1,
+        AnimationTarget::UntouchedThisStep => 0,
     };
     priority(&a).cmp(&priority(&b))
 }

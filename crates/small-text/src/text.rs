@@ -14,12 +14,12 @@ use ratatui::{
     widgets::Widget,
 };
 
-use crate::{
+use super::{
     Animation,
     AnimationStyle,
     SmallTextStyle,
     SymbolStyle,
-    TargetedSymbols,
+    Target,
 };
 
 #[derive(Debug, Default, Clone)]
@@ -36,7 +36,7 @@ where
     text: &'a str,
     text_char_count: u16,
 
-    symbol_styles: Vec<(TargetedSymbols, SymbolStyle)>,
+    symbol_styles: Vec<(Target, SymbolStyle)>,
 
     active_animation: Option<Animation>,
     animation_styles: HashMap<K, AnimationStyle>,
@@ -66,9 +66,9 @@ where
     K: PartialEq + Eq + Hash,
 {
     pub fn new(style: SmallTextStyle<'a, K>) -> Self {
-        let mut symbol_styles: Vec<(TargetedSymbols, SymbolStyle)> =
+        let mut symbol_styles: Vec<(Target, SymbolStyle)> =
             style.symbol_styles.into_iter().collect();
-        symbol_styles.sort_by(|a, b| targeted_symbols_sorter(a.0, b.0));
+        symbol_styles.sort_by(|a, b| targets_sorter(a.0, b.0));
 
         Self {
             text: style.text,
@@ -130,7 +130,7 @@ where
 
         for (target, style) in self.symbol_styles.iter() {
             match target {
-                TargetedSymbols::Single(x) => {
+                Target::Single(x) => {
                     if let Some(symbol) = virtual_canvas.get(x) {
                         buf[(symbol.real_x, y)]
                             .set_char(symbol.value)
@@ -140,7 +140,7 @@ where
                         unstyled_symbol_xs.remove(x);
                     }
                 }
-                TargetedSymbols::Range(start, end) => {
+                Target::Range(start, end) => {
                     for x in *start..*end {
                         if let Some(symbol) = virtual_canvas.get(&x) {
                             buf[(symbol.real_x, y)]
@@ -151,7 +151,7 @@ where
                         }
                     }
                 }
-                TargetedSymbols::Untouched => {
+                Target::Untouched => {
                     for x in unstyled_symbol_xs.iter() {
                         if let Some(symbol) = virtual_canvas.get(&x) {
                             buf[(symbol.real_x, y)]
@@ -194,14 +194,11 @@ where
     }
 }
 
-fn targeted_symbols_sorter(
-    a: TargetedSymbols,
-    b: TargetedSymbols,
-) -> Ordering {
-    let priority = |item: &TargetedSymbols| match item {
-        TargetedSymbols::Single(_) => 2,
-        TargetedSymbols::Range(_, _) => 1,
-        TargetedSymbols::Untouched => 0,
+fn targets_sorter(a: Target, b: Target) -> Ordering {
+    let priority = |item: &Target| match item {
+        Target::Single(_) => 2,
+        Target::Range(_, _) => 1,
+        Target::Untouched => 0,
     };
     priority(&a).cmp(&priority(&b))
 }

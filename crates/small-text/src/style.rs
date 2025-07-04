@@ -43,10 +43,10 @@ pub struct SymbolStyle {
 /// which styles should be applied to [`SmallTextWidget`]
 /// when animation is disabled.
 ///
-/// Default variant is [`TargetedSymbols::Untouched`].
+/// Default variant is [`Target::Untouched`].
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 #[non_exhaustive]
-pub enum TargetedSymbols {
+pub enum Target {
     /// A specific position of a single symbol. This
     /// is a virtual X coordinate representing the
     /// offset from the beginning of the text.
@@ -73,14 +73,14 @@ pub enum TargetedSymbols {
 /// use std::collections::HashMap;
 ///
 /// use ratatui_small_text::{
-///     TargetedSymbols,
+///     Target,
 ///     SymbolStyle,
 ///     AnimationStyle,
 ///     SmallTextStyleBuilder,
 /// };
 ///
 /// let symbol_styles = HashMap::from([
-///     (TargetedSymbols::Untouched, SymbolStyle::default()),
+///     (Target::Untouched, SymbolStyle::default()),
 /// ]);
 /// let animation_styles = HashMap::from([
 ///     (1, AnimationStyle::default()),
@@ -102,7 +102,7 @@ where
     pub(crate) text: &'a str,
 
     #[builder(default)]
-    pub(crate) symbol_styles: HashMap<TargetedSymbols, SymbolStyle>,
+    pub(crate) symbol_styles: HashMap<Target, SymbolStyle>,
 
     #[builder(default)]
     pub(crate) animation_styles: HashMap<K, AnimationStyle>,

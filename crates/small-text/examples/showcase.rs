@@ -34,12 +34,12 @@ use ratatui_small_text::{
     AnimationRepeatMode,
     AnimationStepBuilder,
     AnimationStyleBuilder,
-    AnimationTargetedSymbols,
+    AnimationTarget,
     SmallTextStyleBuilder,
     SmallTextWidget,
     SymbolStyle,
     SymbolStyleBuilder,
-    TargetedSymbols,
+    Target,
 };
 
 pub fn main() -> io::Result<()> {
@@ -53,14 +53,14 @@ pub fn main() -> io::Result<()> {
 fn run(terminal: &mut DefaultTerminal) -> io::Result<()> {
     let first_step_actions = HashMap::from([
         (
-            AnimationTargetedSymbols::Single(0),
+            AnimationTarget::Single(0),
             vec![
                 AnimationAction::UpdateForegroundColor(Color::White),
                 AnimationAction::UpdateBackgroundColor(Color::Red),
             ],
         ),
         (
-            AnimationTargetedSymbols::UntouchedThisStep,
+            AnimationTarget::UntouchedThisStep,
             vec![
                 AnimationAction::UpdateForegroundColor(Color::White),
                 AnimationAction::UpdateBackgroundColor(Color::Green),
@@ -75,14 +75,14 @@ fn run(terminal: &mut DefaultTerminal) -> io::Result<()> {
         .unwrap();
     let second_step_actions = HashMap::from([
         (
-            AnimationTargetedSymbols::Single(0),
+            AnimationTarget::Single(0),
             vec![
                 AnimationAction::UpdateForegroundColor(Color::Red),
                 AnimationAction::UpdateBackgroundColor(Color::Gray),
             ],
         ),
         (
-            AnimationTargetedSymbols::UntouchedThisStep,
+            AnimationTarget::UntouchedThisStep,
             vec![
                 AnimationAction::UpdateForegroundColor(Color::White),
                 AnimationAction::UpdateBackgroundColor(Color::Yellow),
@@ -104,7 +104,7 @@ fn run(terminal: &mut DefaultTerminal) -> io::Result<()> {
         .unwrap();
 
     let symbol_styles =
-        HashMap::from([(TargetedSymbols::Untouched, SymbolStyle::default())]);
+        HashMap::from([(Target::Untouched, SymbolStyle::default())]);
     let text_style = SmallTextStyleBuilder::default()
         .with_text("Small text!")
         .with_animation_styles(HashMap::from([(0, animation_style)]))
