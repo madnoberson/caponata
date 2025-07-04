@@ -132,26 +132,21 @@ where
             match target {
                 TargetedSymbols::Single(x) => {
                     if let Some(symbol) = virtual_canvas.get(x) {
-                        self.apply_symbol_style(
-                            symbol.real_x,
-                            y,
-                            buf,
-                            symbol.value,
-                            style,
-                        );
+                        buf[(symbol.real_x, y)]
+                            .set_char(symbol.value)
+                            .set_bg(style.background_color)
+                            .set_fg(style.foreground_color);
+
                         unstyled_symbol_xs.remove(x);
                     }
                 }
                 TargetedSymbols::Range(start, end) => {
                     for x in *start..*end {
                         if let Some(symbol) = virtual_canvas.get(&x) {
-                            self.apply_symbol_style(
-                                symbol.real_x,
-                                y,
-                                buf,
-                                symbol.value,
-                                style,
-                            );
+                            buf[(symbol.real_x, y)]
+                                .set_char(symbol.value)
+                                .set_bg(style.background_color)
+                                .set_fg(style.foreground_color);
                             unstyled_symbol_xs.remove(&x);
                         }
                     }
@@ -159,13 +154,10 @@ where
                 TargetedSymbols::Untouched => {
                     for x in unstyled_symbol_xs.iter() {
                         if let Some(symbol) = virtual_canvas.get(&x) {
-                            self.apply_symbol_style(
-                                symbol.real_x,
-                                y,
-                                buf,
-                                symbol.value,
-                                style,
-                            );
+                            buf[(symbol.real_x, y)]
+                                .set_char(symbol.value)
+                                .set_bg(style.background_color)
+                                .set_fg(style.foreground_color);
                         }
                     }
                 }
@@ -193,32 +185,11 @@ where
 
         for (x, style) in current_frame.symbol_styles {
             if let Some(symbol) = virtual_canvas.get(&x) {
-                self.apply_symbol_style(
-                    symbol.real_x,
-                    y,
-                    buf,
-                    symbol.value,
-                    &style,
-                );
+                buf[(symbol.real_x, y)]
+                    .set_char(symbol.value)
+                    .set_bg(style.background_color)
+                    .set_fg(style.foreground_color);
             }
-        }
-    }
-
-    fn apply_symbol_style(
-        &self,
-        x: u16,
-        y: u16,
-        buf: &mut Buffer,
-        symbol: char,
-        style: &SymbolStyle,
-    ) {
-        let cell = buf[(x, y)].set_char(symbol);
-
-        if let Some(color) = style.background_color {
-            cell.set_bg(color);
-        }
-        if let Some(color) = style.foreground_color {
-            cell.set_fg(color);
         }
     }
 }

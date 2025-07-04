@@ -4,8 +4,10 @@ use std::{
 };
 
 use derive_builder::Builder;
-
-use crate::SymbolStyle;
+use ratatui::style::{
+    Color,
+    Modifier,
+};
 
 /// Represents the selection of symbol positions to
 /// which styles should be applied during a specific
@@ -44,6 +46,16 @@ pub enum AnimationTargetedSymbols {
     UntouchedThisStep,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[non_exhaustive]
+pub enum AnimationAction {
+    UpdateForegroundColor(Color),
+    UpdateBackgroundColor(Color),
+    AddModifier(Modifier),
+    RemoveModifier(Modifier),
+    RemoveAllModifiers,
+}
+
 /// A single step in the text animation.
 ///
 /// # Example
@@ -73,9 +85,10 @@ pub enum AnimationTargetedSymbols {
 #[builder(setter(prefix = "with", into))]
 pub struct AnimationStep {
     /// A map from the selections of the symbol positions
-    /// to their corresponding styles.
+    /// to the actions that applied to them.
     #[builder(default)]
-    pub(crate) symbol_styles: HashMap<AnimationTargetedSymbols, SymbolStyle>,
+    pub(crate) actions:
+        HashMap<AnimationTargetedSymbols, Vec<AnimationAction>>,
 
     /// The duration of this animation step. Once this
     /// time elapses, the animation advances to the next

@@ -29,6 +29,7 @@ use ratatui::{
     widgets::Widget,
 };
 use ratatui_small_text::{
+    AnimationAction,
     AnimationAdvanceMode,
     AnimationRepeatMode,
     AnimationStepBuilder,
@@ -50,51 +51,47 @@ pub fn main() -> io::Result<()> {
 }
 
 fn run(terminal: &mut DefaultTerminal) -> io::Result<()> {
-    let first_step_symbol_styles = HashMap::from([
+    let first_step_actions = HashMap::from([
         (
             AnimationTargetedSymbols::Single(0),
-            SymbolStyleBuilder::default()
-                .with_background_color(Color::Red)
-                .with_foreground_color(Color::White)
-                .build()
-                .unwrap(),
+            vec![
+                AnimationAction::UpdateForegroundColor(Color::White),
+                AnimationAction::UpdateBackgroundColor(Color::Red),
+            ],
         ),
         (
             AnimationTargetedSymbols::UntouchedThisStep,
-            SymbolStyleBuilder::default()
-                .with_background_color(Color::Green)
-                .with_foreground_color(Color::White)
-                .with_modifier(Modifier::BOLD)
-                .build()
-                .unwrap(),
+            vec![
+                AnimationAction::UpdateForegroundColor(Color::White),
+                AnimationAction::UpdateBackgroundColor(Color::Green),
+                AnimationAction::AddModifier(Modifier::BOLD),
+            ],
         ),
     ]);
     let first_animation_step = AnimationStepBuilder::default()
-        .with_symbol_styles(first_step_symbol_styles)
+        .with_actions(first_step_actions)
         .with_duration(Duration::from_millis(200))
         .build()
         .unwrap();
-    let second_step_symbol_styles = HashMap::from([
+    let second_step_actions = HashMap::from([
         (
             AnimationTargetedSymbols::Single(0),
-            SymbolStyleBuilder::default()
-                .with_background_color(Color::Gray)
-                .with_foreground_color(Color::Red)
-                .build()
-                .unwrap(),
+            vec![
+                AnimationAction::UpdateForegroundColor(Color::Red),
+                AnimationAction::UpdateBackgroundColor(Color::Gray),
+            ],
         ),
         (
             AnimationTargetedSymbols::UntouchedThisStep,
-            SymbolStyleBuilder::default()
-                .with_background_color(Color::Yellow)
-                .with_foreground_color(Color::White)
-                .with_modifier(Modifier::BOLD)
-                .build()
-                .unwrap(),
+            vec![
+                AnimationAction::UpdateForegroundColor(Color::White),
+                AnimationAction::UpdateBackgroundColor(Color::Yellow),
+                AnimationAction::AddModifier(Modifier::BOLD),
+            ],
         ),
     ]);
     let second_animation_step = AnimationStepBuilder::default()
-        .with_symbol_styles(second_step_symbol_styles)
+        .with_actions(second_step_actions)
         .with_duration(Duration::from_millis(200))
         .build()
         .unwrap();

@@ -20,65 +20,23 @@ use crate::AnimationStyle;
 /// use ratatui_small_text::SymbolStyleBuilder;
 ///
 /// let symbol_style = SymbolStyleBuilder::default()
-///     .with_foreground_color(Color::Reset)
+///     .with_foreground_color(Color::White)
 ///     .with_background_color(Color::Red)
 ///     .with_modifier(Modifier::BOLD)
 ///     .build()
 ///     .unwrap();
 /// ```
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash, Builder)]
-#[builder(setter(prefix = "with", into, strip_option))]
+#[builder(setter(prefix = "with", into))]
 pub struct SymbolStyle {
     #[builder(default)]
-    pub(crate) foreground_color: Option<Color>,
+    pub(crate) foreground_color: Color,
 
     #[builder(default)]
-    pub(crate) background_color: Option<Color>,
+    pub(crate) background_color: Color,
 
     #[builder(default)]
-    pub(crate) modifier: Option<Modifier>,
-}
-
-impl SymbolStyle {
-    /// Merges properties from another `SymbolStyle` into this
-    /// one, overwriting only properties that are not `None`
-    /// in the other style.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use ratatui::style::{Color, Modifier};
-    /// use ratatui_small_text::SymbolStyleBuilder;
-    ///
-    /// let mut first_style = SymbolStyleBuilder::default()
-    ///     .with_background_color(Color::Red)
-    ///     .build()
-    ///     .unwrap();
-    /// let second_style = SymbolStyleBuilder::default()
-    ///     .with_foreground_color(Color::Blue)
-    ///     .with_modifier(Modifier::BOLD)
-    ///     .build()
-    ///     .unwrap();
-    ///
-    /// first_style.merge(second_style);
-    ///
-    /// // first_style = SymbolStyle {
-    /// //    foreground_color = Color::Blue,
-    /// //    background_color = Color::Red,
-    /// //    modifier = Modifier::BOLD,
-    /// // }
-    /// ```
-    pub(crate) fn merge(&mut self, other: SymbolStyle) {
-        if let Some(color) = other.foreground_color {
-            self.foreground_color = Some(color);
-        }
-        if let Some(color) = other.background_color {
-            self.background_color = Some(color);
-        }
-        if let Some(modifier) = other.modifier {
-            self.modifier = Some(modifier);
-        }
-    }
+    pub(crate) modifier: Modifier,
 }
 
 /// Represents the selection of symbol positions to

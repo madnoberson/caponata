@@ -4,15 +4,16 @@ use std::{
     time::Instant,
 };
 
+use ratatui::style::Modifier;
+
 use super::{
     AdvancableAnimation,
+    AnimationAction,
     AnimationStep,
     AnimationStyle,
-};
-use crate::{
     AnimationTargetedSymbols,
-    SymbolStyle,
 };
+use crate::SymbolStyle;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum SymbolState {
@@ -116,9 +117,11 @@ impl Animation {
             self.next_step(now)
         };
 
-        match step {
-            Some(step) => self.step_to_frame(step).into(),
-            None => None,
+        if let Some(step) = step {
+            self.process_step(step);
+            self.build_frame().into()
+        } else {
+            None
         }
     }
 
@@ -154,13 +157,31 @@ impl Animation {
         }
     }
 
-    fn step_to_frame(&mut self, step: AnimationStep) -> AnimationFrame {
-        let mut symbol_styles: Vec<(AnimationTargetedSymbols, SymbolStyle)> =
-            step.symbol_styles.into_iter().collect();
-        symbol_styles.sort_by(|a, b| targeted_symbols_sorter(a.0, b.0));
+    fn process_step(&mut self, step: AnimationStep) {
+        let mut step_states: HashMap<u16, StepSymbolState> = self
+            .symbol_states
+            .clone()
+            .into_iter()
+            .map(|(x, state)| (x, state.into()))
+            .collect();
+        let mut actions: Vec<(
+            AnimationTargetedSymbols,
+            Vec<AnimationAction>,
+        )> = step.actions.into_iter().collect();
+        actions.sort_by(|a, b| targeted_symbols_sorter(a.0, b.0));
 
-        self.apply_styles(symbol_styles);
+        for (target, actions) in actions {
+            let xs = self.xs_by_targeted_symbols(target, &step_states);
+            self.execute_actions(xs, &mut step_states, actions);
+        }
 
+        self.symbol_states = step_states
+            .into_iter()
+            .map(|(x, state)| (x, state.into()))
+            .collect();
+    }
+
+    fn build_frame(&self) -> AnimationFrame {
         let symbol_styles: HashMap<u16, SymbolStyle> = self
             .symbol_states
             .iter()
@@ -171,28 +192,6 @@ impl Animation {
             .collect();
 
         AnimationFrame { symbol_styles }
-    }
-
-    fn apply_styles(
-        &mut self,
-        symbol_styles: Vec<(AnimationTargetedSymbols, SymbolStyle)>,
-    ) {
-        let mut step_states: HashMap<u16, StepSymbolState> = self
-            .symbol_states
-            .clone()
-            .into_iter()
-            .map(|(x, state)| (x, state.into()))
-            .collect();
-
-        for (target, style) in symbol_styles {
-            let xs = self.xs_by_targeted_symbols(target, &step_states);
-            self.apply_style_to_step_states(style, xs, &mut step_states);
-        }
-
-        self.symbol_states = step_states
-            .into_iter()
-            .map(|(x, state)| (x, state.into()))
-            .collect();
     }
 
     fn xs_by_targeted_symbols(
@@ -224,32 +223,58 @@ impl Animation {
         }
     }
 
-    fn apply_style_to_step_states(
+    fn execute_actions(
         &self,
-        style: SymbolStyle,
         xs: Vec<u16>,
         step_states: &mut HashMap<u16, StepSymbolState>,
+        actions: Vec<AnimationAction>,
     ) {
         for x in xs {
-            let step_state = if let Some(state) = step_states.get_mut(&x) {
-                match state {
-                    StepSymbolState::Styled(old_style) => {
-                        old_style.merge(style);
-                        *state
-                    }
-                    StepSymbolState::Untouched(Some(old_style)) => {
-                        old_style.merge(style);
-                        *state
-                    }
-                    StepSymbolState::Untouched(None) => {
-                        StepSymbolState::Styled(style)
-                    }
+            let step_state = if let Some(state) = step_states.get(&x) {
+                let mut style = match state {
+                    StepSymbolState::Styled(style) => *style,
+                    StepSymbolState::Untouched(Some(style)) => *style,
+                    StepSymbolState::Untouched(None) => SymbolStyle::default(),
+                };
+                for action in actions.iter() {
+                    self.execute_action(&mut style, *action);
                 }
+
+                StepSymbolState::Styled(style)
             } else {
+                let mut style = SymbolStyle::default();
+                for action in actions.iter() {
+                    self.execute_action(&mut style, *action);
+                }
+
                 StepSymbolState::Styled(style)
             };
 
             step_states.insert(x, step_state);
+        }
+    }
+
+    fn execute_action(
+        &self,
+        style: &mut SymbolStyle,
+        action: AnimationAction,
+    ) {
+        match action {
+            AnimationAction::UpdateForegroundColor(color) => {
+                style.foreground_color = color;
+            }
+            AnimationAction::UpdateBackgroundColor(color) => {
+                style.background_color = color;
+            }
+            AnimationAction::AddModifier(modifier) => {
+                style.modifier |= modifier;
+            }
+            AnimationAction::RemoveModifier(modifier) => {
+                style.modifier.remove(modifier);
+            }
+            AnimationAction::RemoveAllModifiers => {
+                style.modifier = Modifier::empty();
+            }
         }
     }
 }
