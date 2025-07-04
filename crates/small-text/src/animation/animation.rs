@@ -20,21 +20,35 @@ enum SymbolState {
     Untouched,
 }
 
+impl Into<StepSymbolState> for SymbolState {
+    fn into(self) -> StepSymbolState {
+        match self {
+            Self::Styled(style) => StepSymbolState::Untouched(style.into()),
+            Self::Untouched => StepSymbolState::Untouched(None),
+        }
+    }
+}
+
+/// Represents the state of a symbol for the current
+/// step.
+///
+/// # Variants:
+///
+/// - `Styled(SymbolStyle)`: The symbol was styled in
+///    the current step.
+///
+/// - `Untouched(Option<SymbolStyle>)`: The symbol was
+///    not styled in the current step.
+///
+///    - `None`: The symbol has never been styled in
+///       current or any previous steps.
+///
+///    - `Some(SymbolStyle)`: The symbol was styled in
+///       a previous step, and this is its style.
 #[derive(Clone, Copy)]
 enum StepSymbolState {
     Styled(SymbolStyle),
     Untouched(Option<SymbolStyle>),
-}
-
-impl From<SymbolState> for StepSymbolState {
-    fn from(value: SymbolState) -> Self {
-        match value {
-            SymbolState::Styled(style) => {
-                StepSymbolState::Untouched(style.into())
-            }
-            SymbolState::Untouched => StepSymbolState::Untouched(None),
-        }
-    }
 }
 
 impl Into<SymbolState> for StepSymbolState {
@@ -47,18 +61,10 @@ impl Into<SymbolState> for StepSymbolState {
     }
 }
 
-impl StepSymbolState {
-    fn merge_symbol_style(&mut self, style: SymbolStyle) {
-        match self {
-            Self::Styled(old_style) => old_style.merge(style),
-            Self::Untouched(Some(old_style)) => old_style.merge(style),
-            Self::Untouched(None) => {}
-        }
-    }
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct AnimationFrame {
+    /// A map from virtual X coordinates of symbols to
+    /// their corresponding styles.
     pub(crate) symbol_styles: HashMap<u16, SymbolStyle>,
 }
 
@@ -101,10 +107,10 @@ impl Animation {
     pub fn next_frame(&mut self) -> Option<AnimationFrame> {
         let now = Instant::now();
 
-        let step = if self.last_step_retrieved_at.is_none() {
-            self.last_step_retrieved_at = Some(now);
+        let step = if self.is_paused {
             self.advancable_animation.current_step()
-        } else if self.is_paused {
+        } else if self.last_step_retrieved_at.is_none() {
+            self.last_step_retrieved_at = Some(now);
             self.advancable_animation.current_step()
         } else {
             self.next_step(now)
@@ -179,98 +185,72 @@ impl Animation {
             .collect();
 
         for (target, style) in symbol_styles {
-            match target {
-                AnimationTargetedSymbols::Single(x) => {
-                    let step_state =
-                        if let Some(state) = step_states.get_mut(&x) {
-                            if let StepSymbolState::Untouched(None) = state {
-                                StepSymbolState::Styled(style)
-                            } else {
-                                state.merge_symbol_style(style);
-                                *state
-                            }
-                        } else {
-                            StepSymbolState::Styled(style)
-                        };
-                    step_states.insert(x, step_state);
-                }
-                AnimationTargetedSymbols::Range(start, end) => {
-                    for x in start..=end {
-                        let step_state = if let Some(state) =
-                            step_states.get_mut(&x)
-                        {
-                            if let StepSymbolState::Untouched(None) = state {
-                                StepSymbolState::Styled(style)
-                            } else {
-                                state.merge_symbol_style(style);
-                                *state
-                            }
-                        } else {
-                            StepSymbolState::Styled(style)
-                        };
-                        step_states.insert(x, step_state);
-                    }
-                }
-                AnimationTargetedSymbols::Untouched => {
-                    let untouched_state_xs: Vec<u16> = step_states
-                        .iter()
-                        .filter(|(_, step)| {
-                            matches!(step, StepSymbolState::Untouched(None))
-                        })
-                        .map(|(x, _)| x)
-                        .copied()
-                        .collect();
-
-                    for x in untouched_state_xs {
-                        let step_state = if let Some(state) =
-                            step_states.get_mut(&x)
-                        {
-                            if let StepSymbolState::Untouched(None) = state {
-                                StepSymbolState::Styled(style)
-                            } else {
-                                state.merge_symbol_style(style);
-                                *state
-                            }
-                        } else {
-                            StepSymbolState::Styled(style)
-                        };
-                        step_states.insert(x, step_state);
-                    }
-                }
-                AnimationTargetedSymbols::UntouchedThisStep => {
-                    let untouched_state_xs: Vec<u16> = step_states
-                        .iter()
-                        .filter(|(_, step)| {
-                            matches!(step, StepSymbolState::Untouched(_))
-                        })
-                        .map(|(x, _)| x)
-                        .copied()
-                        .collect();
-
-                    for x in untouched_state_xs {
-                        let step_state = if let Some(state) =
-                            step_states.get_mut(&x)
-                        {
-                            if let StepSymbolState::Untouched(None) = state {
-                                StepSymbolState::Styled(style)
-                            } else {
-                                state.merge_symbol_style(style);
-                                *state
-                            }
-                        } else {
-                            StepSymbolState::Styled(style)
-                        };
-
-                        step_states.insert(x, step_state);
-                    }
-                }
-            }
+            let xs = self.xs_by_targeted_symbols(target, &step_states);
+            self.apply_style_to_step_states(style, xs, &mut step_states);
         }
 
         self.symbol_states = step_states
             .into_iter()
             .map(|(x, state)| (x, state.into()))
             .collect();
+    }
+
+    fn xs_by_targeted_symbols(
+        &self,
+        target: AnimationTargetedSymbols,
+        step_states: &HashMap<u16, StepSymbolState>,
+    ) -> Vec<u16> {
+        match target {
+            AnimationTargetedSymbols::Single(x) => vec![x],
+            AnimationTargetedSymbols::Range(start, end) => {
+                (start..=end).collect()
+            }
+            AnimationTargetedSymbols::Untouched => step_states
+                .iter()
+                .filter(|(_, step)| {
+                    matches!(step, StepSymbolState::Untouched(None))
+                })
+                .map(|(x, _)| x)
+                .copied()
+                .collect(),
+            AnimationTargetedSymbols::UntouchedThisStep => step_states
+                .iter()
+                .filter(|(_, step)| {
+                    matches!(step, StepSymbolState::Untouched(_))
+                })
+                .map(|(x, _)| x)
+                .copied()
+                .collect(),
+        }
+    }
+
+    fn apply_style_to_step_states(
+        &self,
+        style: SymbolStyle,
+        xs: Vec<u16>,
+        step_states: &mut HashMap<u16, StepSymbolState>,
+    ) {
+        for x in xs {
+            let step_state = if let Some(state) = step_states.get_mut(&x) {
+                match state {
+                    StepSymbolState::Styled(old_style) => {
+                        old_style.merge(style);
+                        *state
+                    }
+                    StepSymbolState::Untouched(Some(old_style)) => {
+                        old_style.merge(style);
+                        *state
+                    }
+                    StepSymbolState::Untouched(None) => {
+                        StepSymbolState::Styled(style)
+                    }
+                }
+            } else {
+                StepSymbolState::Styled(style)
+            };
+
+            step_states.insert(x, step_state);
+        }
     }
 }
 
