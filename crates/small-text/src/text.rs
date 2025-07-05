@@ -84,8 +84,8 @@ where
     /// with the new one.
     pub fn enable_animation(&mut self, key: &K) {
         if let Some(style) = self.animation_styles.get(key) {
-            let animation =
-                Animation::new(style.clone(), self.text_char_count);
+            let symbol_styles = self.calculate_symbol_styles();
+            let animation = Animation::new(style.clone(), symbol_styles);
             self.active_animation = Some(animation);
         }
     }
@@ -163,6 +163,34 @@ where
                 }
             }
         }
+    }
+
+    fn calculate_symbol_styles(&self) -> HashMap<u16, SymbolStyle> {
+        let mut unstyled_symbol_x_coords: HashSet<u16> =
+            (0..self.text_char_count).collect();
+        let mut symbol_styles: HashMap<u16, SymbolStyle> = HashMap::new();
+
+        for (target, style) in self.symbol_styles.iter() {
+            match target {
+                Target::Single(x) => {
+                    unstyled_symbol_x_coords.remove(x);
+                    symbol_styles.insert(*x, *style);
+                }
+                Target::Range(start, end) => {
+                    for x in *start..*end {
+                        unstyled_symbol_x_coords.remove(&x);
+                        symbol_styles.insert(x, *style);
+                    }
+                }
+                Target::Untouched => {
+                    for x in unstyled_symbol_x_coords.iter() {
+                        symbol_styles.insert(*x, *style);
+                    }
+                }
+            }
+        }
+
+        symbol_styles
     }
 
     fn apply_animation(

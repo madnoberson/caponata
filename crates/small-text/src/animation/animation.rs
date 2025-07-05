@@ -18,14 +18,14 @@ use crate::SymbolStyle;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum SymbolState {
     Styled(SymbolStyle),
-    Untouched,
+    Initial(SymbolStyle),
 }
 
 impl Into<StepSymbolState> for SymbolState {
     fn into(self) -> StepSymbolState {
         match self {
-            Self::Styled(style) => StepSymbolState::Untouched(style.into()),
-            Self::Untouched => StepSymbolState::Untouched(None),
+            Self::Styled(style) => StepSymbolState::Untouched(style),
+            Self::Initial(style) => StepSymbolState::Initial(style),
         }
     }
 }
@@ -49,15 +49,16 @@ impl Into<StepSymbolState> for SymbolState {
 #[derive(Clone, Copy)]
 enum StepSymbolState {
     Styled(SymbolStyle),
-    Untouched(Option<SymbolStyle>),
+    Initial(SymbolStyle),
+    Untouched(SymbolStyle),
 }
 
 impl Into<SymbolState> for StepSymbolState {
     fn into(self) -> SymbolState {
         match self {
             Self::Styled(style) => SymbolState::Styled(style),
-            Self::Untouched(Some(style)) => SymbolState::Styled(style),
-            Self::Untouched(None) => SymbolState::Untouched,
+            Self::Initial(style) => SymbolState::Initial(style),
+            Self::Untouched(style) => SymbolState::Styled(style),
         }
     }
 }
@@ -87,14 +88,18 @@ pub(crate) struct Animation {
 }
 
 impl Animation {
-    pub fn new(style: AnimationStyle, text_char_count: u16) -> Self {
+    pub fn new(
+        style: AnimationStyle,
+        symbol_styles: HashMap<u16, SymbolStyle>,
+    ) -> Self {
         let advancable_animation = AdvancableAnimation::new(
             style.steps,
             style.repeat_mode,
             style.advance_mode,
         );
-        let symbol_states: HashMap<u16, SymbolState> = (0..text_char_count)
-            .map(|x| (x, SymbolState::Untouched))
+        let symbol_states: HashMap<u16, SymbolState> = symbol_styles
+            .iter()
+            .map(|(x, style)| (*x, SymbolState::Initial(*style)))
             .collect();
 
         Self {
@@ -186,7 +191,7 @@ impl Animation {
             .iter()
             .filter_map(|(&x, state)| match state {
                 SymbolState::Styled(style) => (x, *style).into(),
-                SymbolState::Untouched => None,
+                SymbolState::Initial(style) => (x, *style).into(),
             })
             .collect();
 
@@ -204,7 +209,7 @@ impl Animation {
             AnimationTarget::Untouched => step_states
                 .iter()
                 .filter(|(_, step)| {
-                    matches!(step, StepSymbolState::Untouched(None))
+                    matches!(step, StepSymbolState::Initial(_))
                 })
                 .map(|(x, _)| x)
                 .copied()
@@ -212,7 +217,11 @@ impl Animation {
             AnimationTarget::UntouchedThisStep => step_states
                 .iter()
                 .filter(|(_, step)| {
-                    matches!(step, StepSymbolState::Untouched(_))
+                    matches!(
+                        step,
+                        StepSymbolState::Untouched(_)
+                            | StepSymbolState::Initial(_)
+                    )
                 })
                 .map(|(x, _)| x)
                 .copied()
@@ -227,27 +236,19 @@ impl Animation {
         actions: Vec<AnimationAction>,
     ) {
         for x in x_coords {
-            let step_state = if let Some(state) = step_states.get(&x) {
-                let mut style = match state {
-                    StepSymbolState::Styled(style) => *style,
-                    StepSymbolState::Untouched(Some(style)) => *style,
-                    StepSymbolState::Untouched(None) => SymbolStyle::default(),
-                };
-                for action in actions.iter() {
-                    self.execute_action(&mut style, *action);
-                }
+            let step_state = step_states.get_mut(&x).unwrap();
 
-                StepSymbolState::Styled(style)
-            } else {
-                let mut style = SymbolStyle::default();
-                for action in actions.iter() {
-                    self.execute_action(&mut style, *action);
-                }
-
-                StepSymbolState::Styled(style)
+            let mut style = match step_state {
+                StepSymbolState::Styled(style) => style,
+                StepSymbolState::Untouched(style) => style,
+                StepSymbolState::Initial(style) => style,
             };
+            for action in actions.iter() {
+                self.execute_action(&mut style, *action);
+            }
 
-            step_states.insert(x, step_state);
+            let new_step_state = StepSymbolState::Styled(*style);
+            step_states.insert(x, new_step_state);
         }
     }
 
@@ -264,7 +265,7 @@ impl Animation {
                 style.background_color = color;
             }
             AnimationAction::AddModifier(modifier) => {
-                style.modifier |= modifier;
+                style.modifier = style.modifier.union(modifier);
             }
             AnimationAction::RemoveModifier(modifier) => {
                 style.modifier.remove(modifier);
