@@ -13,7 +13,7 @@ impl FinitelyRepeatableAnimation {
         Self {
             steps: steps,
             current_index: 0,
-            max_iteration: max_iteration,
+            max_iteration: max_iteration.saturating_sub(1),
             current_iteration: 0,
         }
     }
@@ -22,7 +22,7 @@ impl FinitelyRepeatableAnimation {
     /// limit is not reached; otherwise returns `None`.
     pub fn current_step(&self) -> Option<AnimationStep> {
         let iterations_limit_is_reached = self.current_index
-            == self.steps.len() - 1
+            == self.steps.len().saturating_sub(1)
             && self.current_iteration == self.max_iteration;
         if iterations_limit_is_reached {
             return None;
@@ -36,7 +36,7 @@ impl FinitelyRepeatableAnimation {
     /// returns `None`.
     pub fn next_step(&mut self) -> Option<AnimationStep> {
         let iterations_limit_is_reached = match (
-            self.current_index == self.steps.len() - 1,
+            self.current_index == self.steps.len().saturating_sub(1),
             self.current_iteration == self.max_iteration,
         ) {
             (false, false) | (false, true) => {

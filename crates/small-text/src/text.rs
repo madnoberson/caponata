@@ -56,8 +56,16 @@ where
         let virtual_canvas: HashMap<u16, Symbol> =
             (0..0 + available_width).zip(symbols).collect();
 
-        self.apply_styles(area.y, buf, &virtual_canvas);
-        self.apply_animation(area.y, buf, &virtual_canvas);
+        if self.active_animation.is_some() {
+            let animation_is_ended =
+                self.apply_animation(area.y, buf, &virtual_canvas);
+            if animation_is_ended {
+                self.disable_animation();
+                self.apply_styles(area.y, buf, &virtual_canvas);
+            }
+        } else {
+            self.apply_styles(area.y, buf, &virtual_canvas);
+        }
     }
 }
 
@@ -125,7 +133,7 @@ where
         buf: &mut Buffer,
         virtual_canvas: &HashMap<u16, Symbol>,
     ) {
-        let mut unstyled_symbol_xs: HashSet<u16> =
+        let mut unstyled_symbol_x_coords: HashSet<u16> =
             virtual_canvas.keys().copied().collect();
 
         for (target, style) in self.symbol_styles.iter() {
@@ -137,7 +145,7 @@ where
                             .set_bg(style.background_color)
                             .set_fg(style.foreground_color);
 
-                        unstyled_symbol_xs.remove(x);
+                        unstyled_symbol_x_coords.remove(x);
                     }
                 }
                 Target::Range(start, end) => {
@@ -147,12 +155,12 @@ where
                                 .set_char(symbol.value)
                                 .set_bg(style.background_color)
                                 .set_fg(style.foreground_color);
-                            unstyled_symbol_xs.remove(&x);
+                            unstyled_symbol_x_coords.remove(&x);
                         }
                     }
                 }
                 Target::Untouched => {
-                    for x in unstyled_symbol_xs.iter() {
+                    for x in unstyled_symbol_x_coords.iter() {
                         if let Some(symbol) = virtual_canvas.get(&x) {
                             buf[(symbol.real_x, y)]
                                 .set_char(symbol.value)
@@ -198,17 +206,14 @@ where
         y: u16,
         buf: &mut Buffer,
         virtual_canvas: &HashMap<u16, Symbol>,
-    ) {
+    ) -> bool {
         let active_animation = match self.active_animation.as_mut() {
             Some(animation) => animation,
-            None => return,
+            None => return true,
         };
         let current_frame = match active_animation.next_frame() {
             Some(frame) => frame,
-            None => {
-                self.active_animation = None;
-                return;
-            }
+            None => return true,
         };
 
         for (x, style) in current_frame.symbol_styles {
@@ -219,6 +224,8 @@ where
                     .set_fg(style.foreground_color);
             }
         }
+
+        false
     }
 }
 

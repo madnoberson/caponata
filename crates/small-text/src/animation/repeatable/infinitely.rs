@@ -22,7 +22,7 @@ impl InfinitelyRepeatableAnimation {
     /// Advances the animation and returns the current
     /// animation step.
     pub fn next_step(&mut self) -> AnimationStep {
-        if self.current_index != self.steps.len() - 1 {
+        if self.current_index != self.steps.len().saturating_sub(1) {
             self.current_index += 1;
         } else {
             self.current_index = 0;

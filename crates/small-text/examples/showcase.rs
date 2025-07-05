@@ -98,7 +98,7 @@ fn run(terminal: &mut DefaultTerminal) -> io::Result<()> {
 
     let animation_style = AnimationStyleBuilder::default()
         .with_advance_mode(AnimationAdvanceMode::Auto)
-        .with_repeat_mode(AnimationRepeatMode::Infinite)
+        .with_repeat_mode(AnimationRepeatMode::Finite(3))
         .with_steps([first_animation_step, second_animation_step])
         .build()
         .unwrap();
