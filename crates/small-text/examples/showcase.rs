@@ -76,7 +76,6 @@ fn run(terminal: &mut DefaultTerminal) -> io::Result<()> {
         .remove_modifier(Modifier::BOLD)
         .then()
         .build();
-
     let animation_style = AnimationStyleBuilder::default()
         .with_advance_mode(AnimationAdvanceMode::Auto)
         .with_repeat_mode(AnimationRepeatMode::Infinite)

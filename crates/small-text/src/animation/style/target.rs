@@ -27,12 +27,12 @@ pub enum AnimationTarget {
     /// the beginning of the text.
     Range(u16, u16),
 
-    /// Every N-th symbol position, starting from 0.
+    /// Every n-th symbol position, starting from 0.
     /// The value represents the interval between
     /// selected positions.
     Every(u16),
 
-    /// All symbol positions except every N-th one,
+    /// All symbol positions except every n-th one,
     /// starting from 0. The value represents the
     /// interval to skip.
     AllExceptEvery(u16),

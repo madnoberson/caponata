@@ -59,6 +59,16 @@ pub enum Target {
     /// the beginning of the text.
     Range(u16, u16),
 
+    /// Every n-th symbol position, starting from 0.
+    /// The value represents the interval between
+    /// selected positions.
+    Every(u16),
+
+    /// All symbol positions except every n-th one,
+    /// starting from 0. The value represents the
+    /// interval to skip.
+    AllExceptEvery(u16),
+
     /// Positions of symbols that were not affected
     /// by styling.
     #[default]
