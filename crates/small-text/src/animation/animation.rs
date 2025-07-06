@@ -196,9 +196,30 @@ impl Animation {
         target: AnimationTarget,
         step_states: &HashMap<u16, StepSymbolState>,
     ) -> Vec<u16> {
+        let mut step_states: Vec<(u16, StepSymbolState)> = step_states
+            .clone()
+            .iter()
+            .map(|(x, state)| (*x, *state))
+            .collect();
+        step_states.sort_by(|a, b| a.0.cmp(&b.0));
+
         match target {
             AnimationTarget::Single(x) => vec![x],
             AnimationTarget::Range(start, end) => (start..=end).collect(),
+            AnimationTarget::Every(n) => step_states
+                .iter()
+                .map(|(x, _)| *x)
+                .step_by(n as usize)
+                .collect(),
+            AnimationTarget::AllExceptEvery(n) => {
+                step_states
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(i, (x, _))| {
+                        if i as u16 % n != 0 { (*x).into() } else { None }
+                    })
+                    .collect()
+            }
             AnimationTarget::Untouched => step_states
                 .iter()
                 .filter(|(_, step)| {
@@ -272,8 +293,10 @@ impl Animation {
 
 fn targets_sorter(a: AnimationTarget, b: AnimationTarget) -> Ordering {
     let priority = |item: &AnimationTarget| match item {
-        AnimationTarget::Single(_) => 3,
-        AnimationTarget::Range(_, _) => 2,
+        AnimationTarget::Single(_) => 5,
+        AnimationTarget::Range(_, _) => 4,
+        AnimationTarget::Every(_) => 3,
+        AnimationTarget::AllExceptEvery(_) => 2,
         AnimationTarget::Untouched => 1,
         AnimationTarget::UntouchedThisStep => 0,
     };

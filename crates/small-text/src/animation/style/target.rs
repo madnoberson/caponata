@@ -6,8 +6,10 @@
 ///
 /// 1. [`AnimationTarget::Single`]
 /// 2. [`AnimationTarget::Range`]
-/// 3. [`AnimationTarget::Untouched`]
-/// 4. [`AnimationTarget::UntouchedThisStep`]
+/// 3. [`AnimationTarget::Every`]
+/// 4. [`AnimationTarget::AllExceptEvery`]
+/// 5. [`AnimationTarget::Untouched`]
+/// 6. [`AnimationTarget::UntouchedThisStep`]
 ///
 /// Default variant is [`AnimationTarget::Untouched`].
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
@@ -24,6 +26,16 @@ pub enum AnimationTarget {
     /// X coordinates representing the offset from
     /// the beginning of the text.
     Range(u16, u16),
+
+    /// Every N-th symbol position, starting from 0.
+    /// The value represents the interval between
+    /// selected positions.
+    Every(u16),
+
+    /// All symbol positions except every N-th one,
+    /// starting from 0. The value represents the
+    /// interval to skip.
+    AllExceptEvery(u16),
 
     /// Positions of symbols that were not affected
     /// by styling at any step.
