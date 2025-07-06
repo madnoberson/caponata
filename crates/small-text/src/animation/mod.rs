@@ -1,5 +1,5 @@
 mod advancable;
-mod animation;
+pub mod animation;
 mod repeatable;
 pub mod style;
 

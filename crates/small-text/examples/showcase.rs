@@ -29,7 +29,6 @@ use ratatui::{
     widgets::Widget,
 };
 use ratatui_small_text::{
-    AnimationAction,
     AnimationAdvanceMode,
     AnimationRepeatMode,
     AnimationStepBuilder,
@@ -51,50 +50,30 @@ pub fn main() -> io::Result<()> {
 }
 
 fn run(terminal: &mut DefaultTerminal) -> io::Result<()> {
-    let first_step_actions = HashMap::from([
-        (
-            AnimationTarget::Single(0),
-            vec![
-                AnimationAction::UpdateForegroundColor(Color::White),
-                AnimationAction::UpdateBackgroundColor(Color::Red),
-            ],
-        ),
-        (
-            AnimationTarget::UntouchedThisStep,
-            vec![
-                AnimationAction::UpdateForegroundColor(Color::White),
-                AnimationAction::UpdateBackgroundColor(Color::Green),
-                AnimationAction::AddModifier(Modifier::BOLD),
-            ],
-        ),
-    ]);
     let first_animation_step = AnimationStepBuilder::default()
-        .with_actions(first_step_actions)
         .with_duration(Duration::from_millis(200))
-        .build()
-        .unwrap();
-    let second_step_actions = HashMap::from([
-        (
-            AnimationTarget::Single(0),
-            vec![
-                AnimationAction::UpdateForegroundColor(Color::Red),
-                AnimationAction::UpdateBackgroundColor(Color::Gray),
-            ],
-        ),
-        (
-            AnimationTarget::UntouchedThisStep,
-            vec![
-                AnimationAction::UpdateForegroundColor(Color::White),
-                AnimationAction::UpdateBackgroundColor(Color::Yellow),
-                AnimationAction::AddModifier(Modifier::BOLD),
-            ],
-        ),
-    ]);
+        .for_target(AnimationTarget::Single(0))
+        .update_foreground_color(Color::White)
+        .update_background_color(Color::Red)
+        .then()
+        .for_target(AnimationTarget::UntouchedThisStep)
+        .update_foreground_color(Color::White)
+        .update_background_color(Color::Green)
+        .add_modifier(Modifier::BOLD)
+        .then()
+        .build();
     let second_animation_step = AnimationStepBuilder::default()
-        .with_actions(second_step_actions)
         .with_duration(Duration::from_millis(200))
-        .build()
-        .unwrap();
+        .for_target(AnimationTarget::Single(0))
+        .update_foreground_color(Color::Red)
+        .update_background_color(Color::Gray)
+        .then()
+        .for_target(AnimationTarget::UntouchedThisStep)
+        .update_foreground_color(Color::White)
+        .update_background_color(Color::Yellow)
+        .add_modifier(Modifier::BOLD)
+        .then()
+        .build();
 
     let animation_style = AnimationStyleBuilder::default()
         .with_advance_mode(AnimationAdvanceMode::Auto)

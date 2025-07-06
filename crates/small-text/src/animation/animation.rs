@@ -32,24 +32,17 @@ impl Into<StepSymbolState> for SymbolState {
 
 /// Represents the state of a symbol for the current
 /// step.
-///
-/// # Variants:
-///
-/// - `Styled(SymbolStyle)`: The symbol was styled in
-///    the current step.
-///
-/// - `Untouched(Option<SymbolStyle>)`: The symbol was
-///    not styled in the current step.
-///
-///    - `None`: The symbol has never been styled in
-///       current or any previous steps.
-///
-///    - `Some(SymbolStyle)`: The symbol was styled in
-///       a previous step, and this is its style.
 #[derive(Clone, Copy)]
 enum StepSymbolState {
+    /// The symbol was styled in the current step.
     Styled(SymbolStyle),
+
+    /// The symbol was not styled in the current or
+    /// previous steps.
     Initial(SymbolStyle),
+
+    /// The symbol was not styled in the current step,
+    /// but was styled in the previous one.
     Untouched(SymbolStyle),
 }
 
