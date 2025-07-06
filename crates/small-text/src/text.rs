@@ -28,6 +28,80 @@ struct Symbol {
     value: char,
 }
 
+/// A widget that displays one-character height text,
+/// that can be animated.
+///
+/// # Example
+///
+/// ```rust
+/// use std::{
+///    collections::HashMap,
+///    time::Duration,
+/// };
+///
+/// use ratatui::style::{Color, Modifier};
+/// use ratatui_small_text::{
+///     AnimationTarget,
+///     AnimationAction,
+///     AnimationRepeatMode,
+///     AnimationAdvanceMode,
+///     AnimationStepBuilder,
+///     AnimationStyleBuilder,
+///     Target,
+///     SymbolStyleBuilder,
+///     SmallTextStyleBuilder,
+///     SmallTextWidget,
+/// };
+///
+/// let first_step = AnimationStepBuilder::default()
+///     .with_duration(Duration::from_millis(100))
+///     .for_target(AnimationTarget::Single(0))
+///     .add_modifier(Modifier::BOLD)
+///     .then()
+///     .for_target(AnimationTarget::UntouchedThisStep)
+///     .update_foreground_color(Color::Red)
+///     .update_background_color(Color::White)
+///     .add_modifier(Modifier::BOLD)
+///     .then()
+///     .build();
+/// let second_step = AnimationStepBuilder::default()
+///     .with_duration(Duration::from_millis(100))
+///     .for_target(AnimationTarget::Single(1))
+///     .update_foreground_color(Color::Green)
+///     .remove_all_modifiers()
+///     .then()
+///     .for_target(AnimationTarget::UntouchedThisStep)
+///     .update_foreground_color(Color::White)
+///     .update_background_color(Color::Red)
+///     .add_modifier(Modifier::BOLD)
+///     .then()
+///     .build();
+/// let animation_style = AnimationStyleBuilder::default()
+///     .with_repeat_mode(AnimationRepeatMode::Infinite)
+///     .with_advance_mode(AnimationAdvanceMode::Auto)
+///     .with_steps(vec![first_step, second_step])
+///     .build()
+///     .unwrap();
+/// let animation_styles = HashMap::from([(0, animation_style)]);
+///
+/// let symbol_style = SymbolStyleBuilder::default()
+///     .with_background_color(Color::Gray)
+///     .with_foreground_color(Color::Blue)
+///     .with_modifier(Modifier::UNDERLINED)
+///     .build()
+///     .unwrap();
+/// let symbol_styles = HashMap::from([
+///     (Target::Untouched, symbol_style),
+/// ]);
+/// let text_style = SmallTextStyleBuilder::default()
+///     .with_text("Text example")
+///     .with_symbol_styles(symbol_styles)
+///     .with_animation_styles(animation_styles)
+///     .build()
+///     .unwrap();
+///
+/// let text = SmallTextWidget::new(text_style);
+/// ```
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct SmallTextWidget<'a, K = u8>
 where
