@@ -16,8 +16,13 @@ crossterm = { version = "0.29.*", optional = true }
 
 [features]
 default = []
-showcase = ["dep:crossterm", "ratatui/crossterm"]
+all-presets = []
+examples = ["dep:crossterm", "ratatui/crossterm", "all-presets"]
 
 [[example]]
 name = "showcase"
-required-features = ["showcase"]
+required-features = ["examples"]
+
+[[example]]
+name = "presets"
+required-features = ["examples"]
