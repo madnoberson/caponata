@@ -11,6 +11,7 @@ use std::{
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
+    style::Style,
     widgets::Widget,
 };
 
@@ -207,6 +208,7 @@ where
             if *target == Target::Untouched {
                 continue;
             }
+
             for x in resolve_target(*target, self.text_char_count) {
                 virtual_canvas
                     .get(&x)
@@ -220,11 +222,11 @@ where
                 continue;
             }
 
-            let all_x_coords: HashSet<u16> =
-                (0..self.text_char_count).collect();
-            let x_coords = all_x_coords.difference(&styled_x_coords);
+            for x in 0..self.text_char_count {
+                if styled_x_coords.contains(&x) {
+                    continue;
+                }
 
-            for x in x_coords {
                 virtual_canvas
                     .get(&x)
                     .map(|symbol| self.apply_style(buf, y, *symbol, *style));
@@ -233,43 +235,30 @@ where
     }
 
     fn resolve_symbol_styles(&self) -> HashMap<u16, SymbolStyle> {
-        let mut unstyled_symbol_x_coords: HashSet<u16> =
-            (0..self.text_char_count).collect();
-        let x_coords: Vec<u16> = (0..self.text_char_count).collect();
+        let mut styled_x_coords: HashSet<u16> = HashSet::new();
         let mut symbol_styles: HashMap<u16, SymbolStyle> = HashMap::new();
 
         for (target, style) in self.symbol_styles.iter() {
-            match target {
-                Target::Single(x) => {
-                    unstyled_symbol_x_coords.remove(x);
-                    symbol_styles.insert(*x, *style);
+            if *target == Target::Untouched {
+                continue;
+            }
+
+            for x in resolve_target(*target, self.text_char_count) {
+                styled_x_coords.insert(x);
+                symbol_styles.insert(x, *style);
+            }
+        }
+
+        for (target, style) in self.symbol_styles.iter() {
+            if *target != Target::Untouched {
+                continue;
+            }
+
+            for x in 0..self.text_char_count {
+                if styled_x_coords.contains(&x) {
+                    continue;
                 }
-                Target::Range(start, end) => {
-                    for x in *start..*end {
-                        unstyled_symbol_x_coords.remove(&x);
-                        symbol_styles.insert(x, *style);
-                    }
-                }
-                Target::Every(n) => {
-                    for x in x_coords.iter().step_by(*n as usize) {
-                        unstyled_symbol_x_coords.remove(x);
-                        symbol_styles.insert(*x, *style);
-                    }
-                }
-                Target::AllExceptEvery(n) => {
-                    for x in x_coords.iter() {
-                        if x % n == 0 {
-                            continue;
-                        }
-                        unstyled_symbol_x_coords.remove(x);
-                        symbol_styles.insert(*x, *style);
-                    }
-                }
-                Target::Untouched => {
-                    for x in unstyled_symbol_x_coords.iter() {
-                        symbol_styles.insert(*x, *style);
-                    }
-                }
+                symbol_styles.insert(x, *style);
             }
         }
 
@@ -295,10 +284,7 @@ where
 
         for (x, style) in current_frame.symbol_styles {
             if let Some(symbol) = virtual_canvas.get(&x) {
-                buf[(symbol.real_x, y)]
-                    .set_char(symbol.value)
-                    .set_bg(style.background_color)
-                    .set_fg(style.foreground_color);
+                self.apply_style(buf, y, *symbol, style);
             }
         }
 
@@ -312,10 +298,13 @@ where
         symbol: Symbol,
         style: SymbolStyle,
     ) {
+        let ratatui_style = Style::default()
+            .fg(style.foreground_color)
+            .bg(style.background_color)
+            .add_modifier(style.modifier);
         buf[(symbol.real_x, y)]
             .set_char(symbol.value)
-            .set_bg(style.background_color)
-            .set_fg(style.foreground_color);
+            .set_style(ratatui_style);
     }
 }
 
@@ -332,11 +321,12 @@ fn targets_sorter(a: Target, b: Target) -> Ordering {
 
 fn resolve_target(target: Target, char_count: u16) -> Vec<u16> {
     let all = 0..char_count;
+
     match target {
         Target::Single(x) => vec![x],
         Target::Range(start, end) => (start..end).collect(),
         Target::Every(n) => all.step_by(n as usize).collect(),
-        Target::AllExceptEvery(n) => all.filter(move |x| x % n != 0).collect(),
-        Target::Untouched => Vec::with_capacity(0),
+        Target::AllExceptEvery(n) => all.filter(|x| x % n != 0).collect(),
+        Target::Untouched => Vec::new(),
     }
 }
