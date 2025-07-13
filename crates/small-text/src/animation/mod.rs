@@ -1,9 +1,9 @@
 mod advancable;
-pub mod animation;
+mod animation;
 #[cfg(feature = "all-presets")]
-pub mod presets;
+mod presets;
 mod repeatable;
-pub mod style;
+mod style;
 
 use advancable::*;
 pub(crate) use animation::*;

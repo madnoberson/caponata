@@ -16,11 +16,13 @@ use ratatui::{
 };
 
 use super::{
-    Animation,
-    AnimationStyle,
     SmallTextStyle,
     SymbolStyle,
     Target,
+};
+use crate::{
+    Animation,
+    AnimationStyle,
 };
 
 #[derive(Debug, Default, Clone, Copy)]
@@ -234,6 +236,9 @@ where
         }
     }
 
+    /// Resolves symbol styles for each character position.
+    /// Creates a mapping of character positions to their
+    /// corresponding styles based on the targets.
     fn resolve_symbol_styles(&self) -> HashMap<u16, SymbolStyle> {
         let mut styled_x_coords: HashSet<u16> = HashSet::new();
         let mut symbol_styles: HashMap<u16, SymbolStyle> = HashMap::new();
@@ -319,14 +324,17 @@ fn targets_sorter(a: Target, b: Target) -> Ordering {
     priority(&a).cmp(&priority(&b))
 }
 
-fn resolve_target(target: Target, char_count: u16) -> Vec<u16> {
+fn resolve_target(
+    target: Target,
+    char_count: u16,
+) -> Box<dyn Iterator<Item = u16>> {
     let all = 0..char_count;
 
     match target {
-        Target::Single(x) => vec![x],
-        Target::Range(start, end) => (start..end).collect(),
-        Target::Every(n) => all.step_by(n as usize).collect(),
-        Target::AllExceptEvery(n) => all.filter(|x| x % n != 0).collect(),
-        Target::Untouched => Vec::new(),
+        Target::Single(x) => Box::new(std::iter::once(x)),
+        Target::Range(start, end) => Box::new(start..end),
+        Target::Every(n) => Box::new(all.step_by(n as usize)),
+        Target::AllExceptEvery(n) => Box::new(all.filter(move |x| x % n != 0)),
+        Target::Untouched => Box::new(std::iter::empty()),
     }
 }
