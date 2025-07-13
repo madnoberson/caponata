@@ -112,7 +112,7 @@ where
 {
     text: &'a str,
     text_char_count: u16,
-    symbol_styles: Vec<(Target, SymbolStyle)>,
+    symbol_styles: HashMap<u16, SymbolStyle>,
     active_animation: Option<Animation>,
     animation_styles: HashMap<K, AnimationStyle>,
 }
@@ -149,14 +149,15 @@ where
     K: PartialEq + Eq + Hash,
 {
     pub fn new(style: SmallTextStyle<'a, K>) -> Self {
-        let mut symbol_styles: Vec<(Target, SymbolStyle)> =
-            style.symbol_styles.into_iter().collect();
-        symbol_styles.sort_by(|a, b| targets_sorter(a.0, b.0));
+        let text_char_count = style.text.chars().count() as u16;
+
+        let symbol_styles =
+            resolve_symbol_styles(text_char_count, style.symbol_styles);
 
         Self {
             text: style.text,
             text_char_count: style.text.chars().count() as u16,
-            symbol_styles: symbol_styles,
+            symbol_styles,
             active_animation: None,
             animation_styles: style.animation_styles,
         }
@@ -167,7 +168,7 @@ where
     /// with the new one.
     pub fn enable_animation(&mut self, key: &K) {
         if let Some(style) = self.animation_styles.get(key) {
-            let symbol_styles = self.resolve_symbol_styles();
+            let symbol_styles = self.symbol_styles.clone();
             let animation = Animation::new(style.clone(), symbol_styles);
             self.active_animation = Some(animation);
         }
@@ -204,70 +205,11 @@ where
         buf: &mut Buffer,
         virtual_canvas: &HashMap<u16, Symbol>,
     ) {
-        let mut styled_x_coords: HashSet<u16> = HashSet::new();
-
-        for (target, style) in self.symbol_styles.iter() {
-            if *target == Target::Untouched {
-                continue;
-            }
-
-            for x in resolve_target(*target, self.text_char_count) {
-                virtual_canvas
-                    .get(&x)
-                    .map(|symbol| self.apply_style(buf, y, *symbol, *style));
-                styled_x_coords.insert(x);
-            }
+        for (x, style) in self.symbol_styles.iter() {
+            virtual_canvas
+                .get(&x)
+                .map(|symbol| self.apply_style(buf, y, *symbol, *style));
         }
-
-        for (target, style) in self.symbol_styles.iter() {
-            if *target != Target::Untouched {
-                continue;
-            }
-
-            for x in 0..self.text_char_count {
-                if styled_x_coords.contains(&x) {
-                    continue;
-                }
-
-                virtual_canvas
-                    .get(&x)
-                    .map(|symbol| self.apply_style(buf, y, *symbol, *style));
-            }
-        }
-    }
-
-    /// Resolves symbol styles for each character position.
-    /// Creates a mapping of character positions to their
-    /// corresponding styles based on the targets.
-    fn resolve_symbol_styles(&self) -> HashMap<u16, SymbolStyle> {
-        let mut styled_x_coords: HashSet<u16> = HashSet::new();
-        let mut symbol_styles: HashMap<u16, SymbolStyle> = HashMap::new();
-
-        for (target, style) in self.symbol_styles.iter() {
-            if *target == Target::Untouched {
-                continue;
-            }
-
-            for x in resolve_target(*target, self.text_char_count) {
-                styled_x_coords.insert(x);
-                symbol_styles.insert(x, *style);
-            }
-        }
-
-        for (target, style) in self.symbol_styles.iter() {
-            if *target != Target::Untouched {
-                continue;
-            }
-
-            for x in 0..self.text_char_count {
-                if styled_x_coords.contains(&x) {
-                    continue;
-                }
-                symbol_styles.insert(x, *style);
-            }
-        }
-
-        symbol_styles
     }
 
     /// Applies a single animation frame to the buffer. Returns a
@@ -311,6 +253,45 @@ where
             .set_char(symbol.value)
             .set_style(ratatui_style);
     }
+}
+
+/// Resolves symbol styles for each character position.
+/// Creates a mapping of character positions to their
+/// corresponding styles based on the targets.
+fn resolve_symbol_styles(
+    text_char_count: u16,
+    symbol_styles: HashMap<Target, SymbolStyle>,
+) -> HashMap<u16, SymbolStyle> {
+    let mut symbol_styles: Vec<(Target, SymbolStyle)> =
+        symbol_styles.into_iter().collect();
+    symbol_styles.sort_by(|a, b| targets_sorter(a.0, b.0));
+
+    let mut styled_x_coords: HashSet<u16> = HashSet::new();
+    let mut resolved_symbol_styles = HashMap::new();
+
+    for (target, style) in symbol_styles.iter() {
+        if *target == Target::Untouched {
+            continue;
+        }
+        for x in resolve_target(*target, text_char_count) {
+            styled_x_coords.insert(x);
+            resolved_symbol_styles.insert(x, *style);
+        }
+    }
+
+    for (target, style) in symbol_styles.iter() {
+        if *target != Target::Untouched {
+            continue;
+        }
+        for x in 0..text_char_count {
+            if styled_x_coords.contains(&x) {
+                continue;
+            }
+            resolved_symbol_styles.insert(x, *style);
+        }
+    }
+
+    resolved_symbol_styles
 }
 
 fn targets_sorter(a: Target, b: Target) -> Ordering {
