@@ -1,3 +1,3 @@
-pub mod wave;
+mod wave;
 
 pub use wave::*;

@@ -12,21 +12,10 @@ use crossterm::event::{
 };
 use ratatui::{
     DefaultTerminal,
-    buffer::Buffer,
-    layout::{
-        Alignment,
-        Constraint,
-        Direction,
-        Layout,
-        Rect,
-    },
     style::{
         Color,
         Modifier,
-        Stylize,
     },
-    text::Line,
-    widgets::Widget,
 };
 use ratatui_small_text::{
     AnimationAdvanceMode,
@@ -37,7 +26,6 @@ use ratatui_small_text::{
     SmallTextStyleBuilder,
     SmallTextWidget,
     SymbolStyle,
-    SymbolStyleBuilder,
     Target,
 };
 

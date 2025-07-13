@@ -13,8 +13,6 @@ use crossterm::event::{
 use ratatui::{
     DefaultTerminal,
     style::Color,
-    text::Line,
-    widgets::Widget,
 };
 use ratatui_small_text::{
     AnimationStyle,
