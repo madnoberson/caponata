@@ -22,7 +22,7 @@ use super::{
     Target,
 };
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Copy)]
 struct Symbol {
     real_x: u16,
     value: char,
@@ -109,9 +109,7 @@ where
 {
     text: &'a str,
     text_char_count: u16,
-
     symbol_styles: Vec<(Target, SymbolStyle)>,
-
     active_animation: Option<Animation>,
     animation_styles: HashMap<K, AnimationStyle>,
 }
@@ -166,39 +164,35 @@ where
     /// with the new one.
     pub fn enable_animation(&mut self, key: &K) {
         if let Some(style) = self.animation_styles.get(key) {
-            let symbol_styles = self.calculate_symbol_styles();
+            let symbol_styles = self.resolve_symbol_styles();
             let animation = Animation::new(style.clone(), symbol_styles);
             self.active_animation = Some(animation);
         }
     }
 
-    /// Disables the currently active animation, if any.
+    /// Disables the currently active animation, if any;
+    /// otherwise has no effect.
     pub fn disable_animation(&mut self) {
         self.active_animation = None;
     }
 
     /// Pauses the currently active animation if it is not
-    /// already paused.
+    /// already paused; otherwise has no effect.
     pub fn pause_animation(&mut self) {
-        if let Some(animation) = self.active_animation.as_mut() {
-            animation.pause();
-        }
+        self.active_animation.as_mut().map(|a| a.pause());
     }
 
     /// Unpauses the currently active animation if it is
-    /// paused.
+    /// paused; otherwise has no effect.
     pub fn unpause_animation(&mut self) {
-        if let Some(animation) = self.active_animation.as_mut() {
-            animation.unpause();
-        }
+        self.active_animation.as_mut().map(|a| a.unpause());
     }
 
     /// Advances the currently active animation if its advance
-    /// mode is [`AnimationAdvanceMode::Manual`].
+    /// mode is [`AnimationAdvanceMode::Manual`]. Has no effect
+    /// if no animation is active or if it's in automatic mode.
     pub fn advance_animation(&mut self) {
-        if let Some(animation) = self.active_animation.as_mut() {
-            animation.advance();
-        }
+        self.active_animation.as_mut().map(|a| a.advance());
     }
 
     fn apply_styles(
@@ -207,74 +201,38 @@ where
         buf: &mut Buffer,
         virtual_canvas: &HashMap<u16, Symbol>,
     ) {
-        let mut unstyled_symbol_x_coords: HashSet<u16> =
-            virtual_canvas.keys().copied().collect();
-        let x_coords: Vec<u16> = (0..self.text_char_count).collect();
+        let mut styled_x_coords: HashSet<u16> = HashSet::new();
 
         for (target, style) in self.symbol_styles.iter() {
-            match target {
-                Target::Single(x) => {
-                    if let Some(symbol) = virtual_canvas.get(x) {
-                        buf[(symbol.real_x, y)]
-                            .set_char(symbol.value)
-                            .set_bg(style.background_color)
-                            .set_fg(style.foreground_color);
+            if *target == Target::Untouched {
+                continue;
+            }
+            for x in resolve_target(*target, self.text_char_count) {
+                virtual_canvas
+                    .get(&x)
+                    .map(|symbol| self.apply_style(buf, y, *symbol, *style));
+                styled_x_coords.insert(x);
+            }
+        }
 
-                        unstyled_symbol_x_coords.remove(x);
-                    }
-                }
-                Target::Range(start, end) => {
-                    for x in *start..*end {
-                        if let Some(symbol) = virtual_canvas.get(&x) {
-                            buf[(symbol.real_x, y)]
-                                .set_char(symbol.value)
-                                .set_bg(style.background_color)
-                                .set_fg(style.foreground_color);
-                            unstyled_symbol_x_coords.remove(&x);
-                        }
-                    }
-                }
-                Target::Every(n) => {
-                    for x in x_coords.iter().step_by(*n as usize) {
-                        if let Some(symbol) = virtual_canvas.get(&x) {
-                            buf[(symbol.real_x, y)]
-                                .set_char(symbol.value)
-                                .set_bg(style.background_color)
-                                .set_fg(style.foreground_color);
-                            unstyled_symbol_x_coords.remove(&x);
-                        }
-                    }
-                }
-                Target::AllExceptEvery(n) => {
-                    for x in x_coords.iter() {
-                        if x % n == 0 {
-                            continue;
-                        }
-                        if let Some(symbol) = virtual_canvas.get(&x) {
-                            buf[(symbol.real_x, y)]
-                                .set_char(symbol.value)
-                                .set_bg(style.background_color)
-                                .set_fg(style.foreground_color);
-                            unstyled_symbol_x_coords.remove(&x);
-                        }
-                    }
-                }
+        for (target, style) in self.symbol_styles.iter() {
+            if *target != Target::Untouched {
+                continue;
+            }
 
-                Target::Untouched => {
-                    for x in unstyled_symbol_x_coords.iter() {
-                        if let Some(symbol) = virtual_canvas.get(&x) {
-                            buf[(symbol.real_x, y)]
-                                .set_char(symbol.value)
-                                .set_bg(style.background_color)
-                                .set_fg(style.foreground_color);
-                        }
-                    }
-                }
+            let all_x_coords: HashSet<u16> =
+                (0..self.text_char_count).collect();
+            let x_coords = all_x_coords.difference(&styled_x_coords);
+
+            for x in x_coords {
+                virtual_canvas
+                    .get(&x)
+                    .map(|symbol| self.apply_style(buf, y, *symbol, *style));
             }
         }
     }
 
-    fn calculate_symbol_styles(&self) -> HashMap<u16, SymbolStyle> {
+    fn resolve_symbol_styles(&self) -> HashMap<u16, SymbolStyle> {
         let mut unstyled_symbol_x_coords: HashSet<u16> =
             (0..self.text_char_count).collect();
         let x_coords: Vec<u16> = (0..self.text_char_count).collect();
@@ -318,6 +276,8 @@ where
         symbol_styles
     }
 
+    /// Applies a single animation frame to the buffer. Returns a
+    /// flag indicating whether the animation was finished.
     fn apply_animation(
         &mut self,
         y: u16,
@@ -344,6 +304,19 @@ where
 
         false
     }
+
+    fn apply_style(
+        &self,
+        buf: &mut Buffer,
+        y: u16,
+        symbol: Symbol,
+        style: SymbolStyle,
+    ) {
+        buf[(symbol.real_x, y)]
+            .set_char(symbol.value)
+            .set_bg(style.background_color)
+            .set_fg(style.foreground_color);
+    }
 }
 
 fn targets_sorter(a: Target, b: Target) -> Ordering {
@@ -355,4 +328,15 @@ fn targets_sorter(a: Target, b: Target) -> Ordering {
         Target::Untouched => 0,
     };
     priority(&a).cmp(&priority(&b))
+}
+
+fn resolve_target(target: Target, char_count: u16) -> Vec<u16> {
+    let all = 0..char_count;
+    match target {
+        Target::Single(x) => vec![x],
+        Target::Range(start, end) => (start..end).collect(),
+        Target::Every(n) => all.step_by(n as usize).collect(),
+        Target::AllExceptEvery(n) => all.filter(move |x| x % n != 0).collect(),
+        Target::Untouched => Vec::with_capacity(0),
+    }
 }
