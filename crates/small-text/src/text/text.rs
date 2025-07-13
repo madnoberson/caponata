@@ -25,10 +25,16 @@ use crate::{
     AnimationStyle,
 };
 
-#[derive(Debug, Default, Clone, Copy)]
-struct Symbol {
-    real_x: u16,
-    value: char,
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct Symbol {
+    pub(crate) value: char,
+    pub(crate) style: SymbolStyle,
+}
+
+impl Symbol {
+    pub(crate) fn new(value: char, style: SymbolStyle) -> Self {
+        Self { value, style }
+    }
 }
 
 /// A widget that displays one-character height text,
@@ -106,30 +112,26 @@ struct Symbol {
 /// let text = SmallTextWidget::new(text_style);
 /// ```
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
-pub struct SmallTextWidget<'a, K = u8>
+pub struct SmallTextWidget<K = u8>
 where
     K: PartialEq + Eq + Hash,
 {
-    text: &'a str,
-    text_char_count: u16,
-    symbol_styles: HashMap<u16, SymbolStyle>,
+    symbols: HashMap<u16, Symbol>,
     active_animation: Option<Animation>,
     animation_styles: HashMap<K, AnimationStyle>,
 }
 
-impl<'a, K> Widget for &mut SmallTextWidget<'a, K>
+impl<K> Widget for &mut SmallTextWidget<K>
 where
     K: PartialEq + Eq + Hash,
 {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let available_width = area.width.min(self.text_char_count);
+        let required_width = self.symbols.iter().count() as u16;
+        let available_width = area.width.min(required_width);
 
-        let symbols: Vec<Symbol> = (area.x..area.x + available_width)
-            .zip(self.text.chars())
-            .map(|(real_x, value)| Symbol { real_x, value })
+        let virtual_canvas: HashMap<u16, u16> = (0..0 + available_width)
+            .zip(area.x..area.x + available_width)
             .collect();
-        let virtual_canvas: HashMap<u16, Symbol> =
-            (0..0 + available_width).zip(symbols).collect();
 
         if self.active_animation.is_some() {
             let animation_is_ended =
@@ -144,20 +146,15 @@ where
     }
 }
 
-impl<'a, K> SmallTextWidget<'a, K>
+impl<K> SmallTextWidget<K>
 where
     K: PartialEq + Eq + Hash,
 {
-    pub fn new(style: SmallTextStyle<'a, K>) -> Self {
-        let text_char_count = style.text.chars().count() as u16;
-
-        let symbol_styles =
-            resolve_symbol_styles(text_char_count, style.symbol_styles);
+    pub fn new(style: SmallTextStyle<K>) -> Self {
+        let symbols = create_symbols(style.text, style.symbol_styles);
 
         Self {
-            text: style.text,
-            text_char_count: style.text.chars().count() as u16,
-            symbol_styles,
+            symbols,
             active_animation: None,
             animation_styles: style.animation_styles,
         }
@@ -168,8 +165,8 @@ where
     /// with the new one.
     pub fn enable_animation(&mut self, key: &K) {
         if let Some(style) = self.animation_styles.get(key) {
-            let symbol_styles = self.symbol_styles.clone();
-            let animation = Animation::new(style.clone(), symbol_styles);
+            let symbols = self.symbols.clone();
+            let animation = Animation::new(style.clone(), symbols);
             self.active_animation = Some(animation);
         }
     }
@@ -203,12 +200,11 @@ where
         &mut self,
         y: u16,
         buf: &mut Buffer,
-        virtual_canvas: &HashMap<u16, Symbol>,
+        virtual_canvas: &HashMap<u16, u16>,
     ) {
-        for (x, style) in self.symbol_styles.iter() {
-            virtual_canvas
-                .get(&x)
-                .map(|symbol| self.apply_style(buf, y, *symbol, *style));
+        for (x, symbol) in self.symbols.iter() {
+            let real_x = virtual_canvas.get(x).unwrap();
+            self.apply_style(buf, *real_x, y, *symbol);
         }
     }
 
@@ -218,7 +214,7 @@ where
         &mut self,
         y: u16,
         buf: &mut Buffer,
-        virtual_canvas: &HashMap<u16, Symbol>,
+        virtual_canvas: &HashMap<u16, u16>,
     ) -> bool {
         let active_animation = match self.active_animation.as_mut() {
             Some(animation) => animation,
@@ -229,42 +225,39 @@ where
             None => return true,
         };
 
-        for (x, style) in current_frame.symbol_styles {
-            if let Some(symbol) = virtual_canvas.get(&x) {
-                self.apply_style(buf, y, *symbol, style);
+        for (x, symbol) in current_frame.symbols {
+            if let Some(real_x) = virtual_canvas.get(&x) {
+                self.apply_style(buf, *real_x, y, symbol);
             }
         }
 
         false
     }
 
-    fn apply_style(
-        &self,
-        buf: &mut Buffer,
-        y: u16,
-        symbol: Symbol,
-        style: SymbolStyle,
-    ) {
+    fn apply_style(&self, buf: &mut Buffer, x: u16, y: u16, symbol: Symbol) {
         let ratatui_style = Style::default()
-            .fg(style.foreground_color)
-            .bg(style.background_color)
-            .add_modifier(style.modifier);
-        buf[(symbol.real_x, y)]
-            .set_char(symbol.value)
-            .set_style(ratatui_style);
+            .fg(symbol.style.foreground_color)
+            .bg(symbol.style.background_color)
+            .add_modifier(symbol.style.modifier);
+        buf[(x, y)].set_char(symbol.value).set_style(ratatui_style);
     }
 }
 
-/// Resolves symbol styles for each character position.
-/// Creates a mapping of character positions to their
-/// corresponding styles based on the targets.
-fn resolve_symbol_styles(
-    text_char_count: u16,
+fn create_symbols(
+    text: &str,
     symbol_styles: HashMap<Target, SymbolStyle>,
-) -> HashMap<u16, SymbolStyle> {
+) -> HashMap<u16, Symbol> {
+    let text_char_count = text.chars().count() as u16;
+
     let mut symbol_styles: Vec<(Target, SymbolStyle)> =
         symbol_styles.into_iter().collect();
     symbol_styles.sort_by(|a, b| targets_sorter(a.0, b.0));
+
+    let symbol_values: HashMap<u16, char> = text
+        .chars()
+        .enumerate()
+        .map(|(x, symbol_value)| (x as u16, symbol_value))
+        .collect();
 
     let mut styled_x_coords: HashSet<u16> = HashSet::new();
     let mut resolved_symbol_styles = HashMap::new();
@@ -274,8 +267,11 @@ fn resolve_symbol_styles(
             continue;
         }
         for x in resolve_target(*target, text_char_count) {
-            styled_x_coords.insert(x);
-            resolved_symbol_styles.insert(x, *style);
+            if let Some(symbol_value) = symbol_values.get(&x) {
+                let symbol = Symbol::new(*symbol_value, *style);
+                resolved_symbol_styles.insert(x, symbol);
+                styled_x_coords.insert(x);
+            };
         }
     }
 
@@ -287,7 +283,10 @@ fn resolve_symbol_styles(
             if styled_x_coords.contains(&x) {
                 continue;
             }
-            resolved_symbol_styles.insert(x, *style);
+            if let Some(symbol_value) = symbol_values.get(&x) {
+                let symbol = Symbol::new(*symbol_value, *style);
+                resolved_symbol_styles.insert(x, symbol);
+            };
         }
     }
 

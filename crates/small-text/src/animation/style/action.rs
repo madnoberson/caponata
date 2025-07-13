@@ -7,6 +7,7 @@ use ratatui::style::{
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum AnimationAction {
+    UpdateCharacter(char),
     UpdateForegroundColor(Color),
     UpdateBackgroundColor(Color),
     AddModifier(Modifier),

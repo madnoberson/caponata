@@ -138,6 +138,41 @@ pub struct AnimationActionAccumulator {
 }
 
 impl AnimationActionAccumulator {
+    /// Adds [`AnimationAction::UpdateCharacter`] to the
+    /// current target actions.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use ratatui_small_text::{AnimationTarget, AnimationStepBuilder};
+    ///
+    /// let mut builder = AnimationStepBuilder::default();
+    /// builder
+    ///     .for_target(AnimationTarget::Single(0))
+    ///     .update_character('!')
+    ///     .then();
+    /// ```
+    ///
+    /// This is equivalent to:
+    ///
+    /// ```rust
+    /// use ratatui_small_text::{
+    ///     AnimationTarget,
+    ///     AnimationAction,
+    ///     AnimationStepBuilder,
+    /// };
+    ///
+    /// let mut builder = AnimationStepBuilder::default();
+    /// builder
+    ///     .for_target(AnimationTarget::Single(0))
+    ///     .do_action(AnimationAction::UpdateCharacter('!'))
+    ///     .then();
+    /// ```
+    pub fn update_character(&mut self, character: char) -> &mut Self {
+        let action = AnimationAction::UpdateCharacter(character);
+        self.do_action(action)
+    }
+
     /// Adds [`AnimationAction::UpdateForegroundColor`] to the
     /// current target actions.
     ///

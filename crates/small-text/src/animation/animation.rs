@@ -13,19 +13,19 @@ use super::{
     AnimationStyle,
     AnimationTarget,
 };
-use crate::SymbolStyle;
+use crate::Symbol;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum SymbolState {
-    Styled(SymbolStyle),
-    Initial(SymbolStyle),
+    Styled(Symbol),
+    Initial(Symbol),
 }
 
 impl Into<StepSymbolState> for SymbolState {
     fn into(self) -> StepSymbolState {
         match self {
-            Self::Styled(style) => StepSymbolState::Untouched(style),
-            Self::Initial(style) => StepSymbolState::Initial(style),
+            Self::Styled(symbol) => StepSymbolState::Untouched(symbol),
+            Self::Initial(symbol) => StepSymbolState::Initial(symbol),
         }
     }
 }
@@ -35,64 +35,50 @@ impl Into<StepSymbolState> for SymbolState {
 #[derive(Clone, Copy)]
 enum StepSymbolState {
     /// The symbol was styled in the current step.
-    Styled(SymbolStyle),
+    Styled(Symbol),
 
     /// The symbol was not styled in the current or
     /// previous steps.
-    Initial(SymbolStyle),
+    Initial(Symbol),
 
     /// The symbol was not styled in the current step,
     /// but was styled in the previous one.
-    Untouched(SymbolStyle),
+    Untouched(Symbol),
 }
 
 impl Into<SymbolState> for StepSymbolState {
     fn into(self) -> SymbolState {
         match self {
-            Self::Styled(style) => SymbolState::Styled(style),
-            Self::Initial(style) => SymbolState::Initial(style),
-            Self::Untouched(style) => SymbolState::Styled(style),
+            Self::Styled(symbol) => SymbolState::Styled(symbol),
+            Self::Initial(symbol) => SymbolState::Initial(symbol),
+            Self::Untouched(symbol) => SymbolState::Styled(symbol),
         }
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct AnimationFrame {
-    /// A map from virtual X coordinates of symbols to
-    /// their corresponding styles.
-    pub(crate) symbol_styles: HashMap<u16, SymbolStyle>,
+    pub(crate) symbols: HashMap<u16, Symbol>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Animation {
     advancable_animation: AdvancableAnimation,
-
-    /// A map from virtual X coordinates of symbols to
-    /// their corresponding styles.
     symbol_states: HashMap<u16, SymbolState>,
-
     is_paused: bool,
-
-    /// A timestamp of the last retrieving of the unqiue
-    /// step. This field is not updated if the current
-    /// step is being retrieved, except the first symbol
-    /// in the cycle.
     last_step_retrieved_at: Option<Instant>,
 }
 
 impl Animation {
-    pub fn new(
-        style: AnimationStyle,
-        symbol_styles: HashMap<u16, SymbolStyle>,
-    ) -> Self {
+    pub fn new(style: AnimationStyle, symbols: HashMap<u16, Symbol>) -> Self {
         let advancable_animation = AdvancableAnimation::new(
             style.steps,
             style.repeat_mode,
             style.advance_mode,
         );
-        let symbol_states: HashMap<u16, SymbolState> = symbol_styles
+        let symbol_states: HashMap<u16, SymbolState> = symbols
             .iter()
-            .map(|(x, style)| (*x, SymbolState::Initial(*style)))
+            .map(|(x, symbol)| (*x, SymbolState::Initial(*symbol)))
             .collect();
 
         Self {
@@ -179,16 +165,16 @@ impl Animation {
     }
 
     fn build_frame(&self) -> AnimationFrame {
-        let symbol_styles: HashMap<u16, SymbolStyle> = self
+        let symbols: HashMap<u16, Symbol> = self
             .symbol_states
             .iter()
             .filter_map(|(&x, state)| match state {
-                SymbolState::Styled(style) => (x, *style).into(),
-                SymbolState::Initial(style) => (x, *style).into(),
+                SymbolState::Styled(symbol) => (x, *symbol).into(),
+                SymbolState::Initial(symbol) => (x, *symbol).into(),
             })
             .collect();
 
-        AnimationFrame { symbol_styles }
+        AnimationFrame { symbols }
     }
 
     fn calculate_x_coords(
@@ -252,40 +238,39 @@ impl Animation {
         for x in x_coords {
             let step_state = step_states.get_mut(&x).unwrap();
 
-            let mut style = match step_state {
-                StepSymbolState::Styled(style) => style,
-                StepSymbolState::Untouched(style) => style,
-                StepSymbolState::Initial(style) => style,
+            let mut symbol = match step_state {
+                StepSymbolState::Styled(symbol) => symbol,
+                StepSymbolState::Untouched(symbol) => symbol,
+                StepSymbolState::Initial(symbol) => symbol,
             };
             for action in actions.iter() {
-                self.execute_action(&mut style, *action);
+                self.execute_action(&mut symbol, *action);
             }
 
-            let new_step_state = StepSymbolState::Styled(*style);
+            let new_step_state = StepSymbolState::Styled(*symbol);
             step_states.insert(x, new_step_state);
         }
     }
 
-    fn execute_action(
-        &self,
-        style: &mut SymbolStyle,
-        action: AnimationAction,
-    ) {
+    fn execute_action(&self, symbol: &mut Symbol, action: AnimationAction) {
         match action {
+            AnimationAction::UpdateCharacter(character) => {
+                symbol.value = character;
+            }
             AnimationAction::UpdateForegroundColor(color) => {
-                style.foreground_color = color;
+                symbol.style.foreground_color = color;
             }
             AnimationAction::UpdateBackgroundColor(color) => {
-                style.background_color = color;
+                symbol.style.background_color = color;
             }
             AnimationAction::AddModifier(modifier) => {
-                style.modifier = style.modifier.union(modifier);
+                symbol.style.modifier = symbol.style.modifier.union(modifier);
             }
             AnimationAction::RemoveModifier(modifier) => {
-                style.modifier.remove(modifier);
+                symbol.style.modifier.remove(modifier);
             }
             AnimationAction::RemoveAllModifiers => {
-                style.modifier = Modifier::empty();
+                symbol.style.modifier = Modifier::empty();
             }
         }
     }
