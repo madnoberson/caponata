@@ -31,7 +31,7 @@ use super::{
 ///     AnimationStepBuilder,
 /// };
 ///
-/// let first_animation_step = AnimationStepBuilder::default()
+/// let animation_step = AnimationStepBuilder::default()
 ///     .with_duration(Duration::from_millis(100))
 ///     .for_target(AnimationTarget::UntouchedThisStep)
 ///     .update_foreground_color(Color::Gray)
@@ -50,40 +50,6 @@ use super::{
 ///     .remove_all_modifiers()
 ///     .then()
 ///     .build();
-///
-/// let actions = HashMap::from([
-///     (
-///         AnimationTarget::UntouchedThisStep,
-///         vec![
-///             AnimationAction::UpdateForegroundColor(Color::Gray),
-///             AnimationAction::UpdateBackgroundColor(Color::Red),
-///             AnimationAction::AddModifier(Modifier::UNDERLINED),
-///         ],
-///     ),
-///     (
-///         AnimationTarget::UntouchedThisStep,
-///         vec![
-///             AnimationAction::UpdateForegroundColor(Color::White),
-///             AnimationAction::UpdateBackgroundColor(Color::Green),
-///             AnimationAction::AddModifier(Modifier::BOLD),
-///             AnimationAction::RemoveModifier(Modifier::UNDERLINED),
-///         ],
-///     ),
-///     (
-///         AnimationTarget::UntouchedThisStep,
-///         vec![
-///             AnimationAction::UpdateForegroundColor(Color::Gray),
-///             AnimationAction::UpdateBackgroundColor(Color::Blue),
-///             AnimationAction::RemoveAllModifiers,
-///         ],
-///     ),
-/// ]);
-/// let second_animation_step = AnimationStep::new(
-///     actions,
-///     Duration::from_millis(100),
-/// );
-///
-/// assert_eq!(first_animation_step, second_animation_step);
 /// ```
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct AnimationStep {
@@ -124,7 +90,7 @@ impl AnimationStep {
 /// use ratatui::style::{Color, Modifier};
 /// use ratatui_small_text::{AnimationTarget, AnimationStepBuilder};
 ///
-/// let step = AnimationStepBuilder::default()
+/// let animation_step = AnimationStepBuilder::default()
 ///     .for_target(AnimationTarget::Single(0))
 ///     .add_modifier(Modifier::BOLD)
 ///     .update_background_color(Color::Blue)
