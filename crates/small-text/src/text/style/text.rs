@@ -53,3 +53,20 @@ where
     #[builder(default)]
     pub(crate) animation_styles: HashMap<K, AnimationStyle>,
 }
+
+impl<'a, K> SmallTextStyle<'a, K>
+where
+    K: PartialEq + Eq + Hash,
+{
+    pub fn new(
+        text: &'a str,
+        symbol_styles: HashMap<Target, SymbolStyle>,
+        animation_styles: HashMap<K, AnimationStyle>,
+    ) -> Self {
+        Self {
+            text,
+            symbol_styles,
+            animation_styles,
+        }
+    }
+}

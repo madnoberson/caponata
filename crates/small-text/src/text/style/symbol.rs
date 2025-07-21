@@ -33,3 +33,17 @@ pub struct SymbolStyle {
     #[builder(default)]
     pub(crate) modifier: Modifier,
 }
+
+impl SymbolStyle {
+    pub fn new(
+        foreground_color: Color,
+        background_color: Color,
+        modifier: Modifier,
+    ) -> Self {
+        Self {
+            foreground_color,
+            background_color,
+            modifier,
+        }
+    }
+}
