@@ -33,12 +33,12 @@ use super::{
 ///
 /// let animation_step = AnimationStepBuilder::default()
 ///     .with_duration(Duration::from_millis(100))
-///     .for_target(AnimationTarget::UntouchedThisStep)
+///     .for_target(AnimationTarget::Single(0))
 ///     .update_foreground_color(Color::Gray)
 ///     .update_background_color(Color::Red)
 ///     .add_modifier(Modifier::UNDERLINED)
 ///     .then()
-///     .for_target(AnimationTarget::UntouchedThisStep)
+///     .for_target(AnimationTarget::Every(2))
 ///     .update_foreground_color(Color::White)
 ///     .update_background_color(Color::Green)
 ///     .add_modifier(Modifier::BOLD)
@@ -97,6 +97,7 @@ impl AnimationStep {
 ///     .then()
 ///     .build();
 /// ```
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AnimationActionAccumulator {
     target: AnimationTarget,
     actions: Vec<AnimationAction>,
@@ -112,13 +113,12 @@ impl AnimationActionAccumulator {
     /// ```rust
     /// use ratatui_small_text::{AnimationTarget, AnimationStepBuilder};
     ///
-    /// let mut builder = AnimationStepBuilder::default();
-    /// builder
+    /// let mut builder = AnimationStepBuilder::default()
     ///     .for_target(AnimationTarget::Single(0))
     ///     .update_character('!')
     ///     .then();
     /// ```
-    pub fn update_character(&mut self, character: char) -> &mut Self {
+    pub fn update_character(self, character: char) -> Self {
         let action = AnimationAction::UpdateCharacter(character);
         self.do_action(action)
     }
@@ -132,13 +132,12 @@ impl AnimationActionAccumulator {
     /// use ratatui::style::Color;
     /// use ratatui_small_text::{AnimationTarget, AnimationStepBuilder};
     ///
-    /// let mut builder = AnimationStepBuilder::default();
-    /// builder
+    /// let mut builder = AnimationStepBuilder::default()
     ///     .for_target(AnimationTarget::Single(0))
     ///     .update_foreground_color(Color::Blue)
     ///     .then();
     /// ```
-    pub fn update_foreground_color(&mut self, color: Color) -> &mut Self {
+    pub fn update_foreground_color(self, color: Color) -> Self {
         let action = AnimationAction::UpdateForegroundColor(color);
         self.do_action(action)
     }
@@ -152,13 +151,12 @@ impl AnimationActionAccumulator {
     /// use ratatui::style::Color;
     /// use ratatui_small_text::{AnimationTarget, AnimationStepBuilder};
     ///
-    /// let mut builder = AnimationStepBuilder::default();
-    /// builder
+    /// let mut builder = AnimationStepBuilder::default()
     ///     .for_target(AnimationTarget::Single(0))
     ///     .update_background_color(Color::Yellow)
     ///     .then();
     /// ```
-    pub fn update_background_color(&mut self, color: Color) -> &mut Self {
+    pub fn update_background_color(self, color: Color) -> Self {
         let action = AnimationAction::UpdateBackgroundColor(color);
         self.do_action(action)
     }
@@ -172,13 +170,12 @@ impl AnimationActionAccumulator {
     /// use ratatui::style::Modifier;
     /// use ratatui_small_text::{AnimationTarget, AnimationStepBuilder};
     ///
-    /// let mut builder = AnimationStepBuilder::default();
-    /// builder
+    /// let mut builder = AnimationStepBuilder::default()
     ///     .for_target(AnimationTarget::Single(0))
     ///     .add_modifier(Modifier::BOLD)
     ///     .then();
     /// ```
-    pub fn add_modifier(&mut self, modifier: Modifier) -> &mut Self {
+    pub fn add_modifier(self, modifier: Modifier) -> Self {
         let action = AnimationAction::AddModifier(modifier);
         self.do_action(action)
     }
@@ -192,13 +189,12 @@ impl AnimationActionAccumulator {
     /// use ratatui::style::Modifier;
     /// use ratatui_small_text::{AnimationTarget, AnimationStepBuilder};
     ///
-    /// let mut builder = AnimationStepBuilder::default();
-    /// builder
+    /// let mut builder = AnimationStepBuilder::default()
     ///     .for_target(AnimationTarget::Single(0))
     ///     .remove_modifier(Modifier::BOLD)
     ///     .then();
     /// ```
-    pub fn remove_modifier(&mut self, modifier: Modifier) -> &mut Self {
+    pub fn remove_modifier(self, modifier: Modifier) -> Self {
         let action = AnimationAction::RemoveModifier(modifier);
         self.do_action(action)
     }
@@ -211,13 +207,12 @@ impl AnimationActionAccumulator {
     /// ```rust
     /// use ratatui_small_text::{AnimationTarget, AnimationStepBuilder};
     ///
-    /// let mut builder = AnimationStepBuilder::default();
-    /// builder
+    /// let mut builder = AnimationStepBuilder::default()
     ///     .for_target(AnimationTarget::Single(0))
     ///     .remove_all_modifiers()
     ///     .then();
     /// ```
-    pub fn remove_all_modifiers(&mut self) -> &mut Self {
+    pub fn remove_all_modifiers(self) -> Self {
         let action = AnimationAction::RemoveAllModifiers;
         self.do_action(action)
     }
@@ -233,13 +228,12 @@ impl AnimationActionAccumulator {
     ///     AnimationStepBuilder,
     /// };
     ///
-    /// let mut builder = AnimationStepBuilder::default();
-    /// builder
+    /// let mut builder = AnimationStepBuilder::default()
     ///     .for_target(AnimationTarget::Single(0))
     ///     .do_action(AnimationAction::RemoveAllModifiers)
     ///     .then();
     /// ```
-    pub fn do_action(&mut self, action: AnimationAction) -> &mut Self {
+    pub fn do_action(mut self, action: AnimationAction) -> Self {
         self.actions.push(action);
         self
     }
@@ -253,8 +247,7 @@ impl AnimationActionAccumulator {
     /// use ratatui::style::{Color, Modifier};
     /// use ratatui_small_text::{AnimationTarget, AnimationStepBuilder};
     ///
-    /// let mut builder = AnimationStepBuilder::default();
-    /// builder
+    /// let mut builder = AnimationStepBuilder::default()
     ///     .for_target(AnimationTarget::Single(0))
     ///     .update_background_color(Color::Green)
     ///     .add_modifier(Modifier::BOLD)
@@ -263,12 +256,10 @@ impl AnimationActionAccumulator {
     ///     .remove_all_modifiers()
     ///     .then();
     /// ```
-    pub fn then(&self) -> AnimationStepBuilder {
+    pub fn then(mut self) -> AnimationStepBuilder {
         let actions = self.actions.clone();
-        let mut step_builder = self.step_builder.clone();
-        step_builder.actions.extend([(self.target, actions)]);
-
-        step_builder
+        self.step_builder.actions.extend([(self.target, actions)]);
+        self.step_builder
     }
 }
 
@@ -315,7 +306,7 @@ pub struct AnimationStepBuilder {
 }
 
 impl AnimationStepBuilder {
-    pub fn with_duration(&mut self, duration: Duration) -> &mut Self {
+    pub fn with_duration(mut self, duration: Duration) -> Self {
         self.duration = duration;
         self
     }
@@ -334,8 +325,7 @@ impl AnimationStepBuilder {
     /// use ratatui::style::{Color, Modifier};
     /// use ratatui_small_text::{AnimationTarget, AnimationStepBuilder};
     ///
-    /// let builder = AnimationStepBuilder::default();
-    /// builder
+    /// let builder = AnimationStepBuilder::default()
     ///     .for_target(AnimationTarget::UntouchedThisStep)
     ///     .update_background_color(Color::Red)
     ///     .add_modifier(Modifier::BOLD)
@@ -343,13 +333,13 @@ impl AnimationStepBuilder {
     ///     .for_target(AnimationTarget::Single(0));
     /// ```
     pub fn for_target(
-        &self,
+        self,
         target: AnimationTarget,
     ) -> AnimationActionAccumulator {
         AnimationActionAccumulator {
             target,
             actions: Vec::new(),
-            step_builder: self.clone(),
+            step_builder: self,
         }
     }
 
@@ -375,9 +365,9 @@ impl AnimationStepBuilder {
     ///     .then()
     ///     .build();
     /// ```
-    pub fn build(&self) -> AnimationStep {
+    pub fn build(self) -> AnimationStep {
         AnimationStep {
-            actions: self.actions.clone(),
+            actions: self.actions,
             duration: self.duration,
         }
     }
