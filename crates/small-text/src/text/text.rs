@@ -5,13 +5,16 @@ use std::{
         HashSet,
     },
     fmt::Debug,
-    hash::Hash,
 };
 
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
-    style::Style,
+    style::{
+        Color,
+        Modifier,
+        Style,
+    },
     widgets::Widget,
 };
 
@@ -20,25 +23,27 @@ use super::{
     SymbolStyle,
     Target,
 };
-use crate::{
-    Animation,
-    AnimationStyle,
-};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
-pub(crate) struct Symbol {
-    pub(crate) value: char,
-    pub(crate) style: SymbolStyle,
+pub struct Symbol {
+    pub value: char,
+    pub foreground_color: Color,
+    pub background_color: Color,
+    pub modifier: Modifier,
 }
 
 impl Symbol {
     pub(crate) fn new(value: char, style: SymbolStyle) -> Self {
-        Self { value, style }
+        Self {
+            value,
+            foreground_color: style.foreground_color,
+            background_color: style.background_color,
+            modifier: style.modifier,
+        }
     }
 }
 
-/// A widget that displays one-character height text,
-/// that can be animated.
+/// A widget that displays one-character height text.
 ///
 /// # Example
 ///
@@ -50,150 +55,58 @@ impl Symbol {
 ///
 /// use ratatui::style::{Color, Modifier};
 /// use ratatui_small_text::{
-///     AnimationTarget,
-///     AnimationAction,
-///     AnimationRepeatMode,
-///     AnimationAdvanceMode,
-///     AnimationStepBuilder,
-///     AnimationStyleBuilder,
 ///     Target,
 ///     SymbolStyleBuilder,
 ///     SmallTextStyleBuilder,
 ///     SmallTextWidget,
 /// };
 ///
-/// let first_step = AnimationStepBuilder::default()
-///     .with_duration(Duration::from_millis(100))
-///     .for_target(AnimationTarget::Single(0))
-///     .add_modifier(Modifier::BOLD)
-///     .then()
-///     .for_target(AnimationTarget::UntouchedThisStep)
-///     .update_foreground_color(Color::Red)
-///     .update_background_color(Color::White)
-///     .add_modifier(Modifier::BOLD)
-///     .then()
-///     .build();
-/// let second_step = AnimationStepBuilder::default()
-///     .with_duration(Duration::from_millis(100))
-///     .for_target(AnimationTarget::Single(1))
-///     .update_foreground_color(Color::Green)
-///     .remove_all_modifiers()
-///     .then()
-///     .for_target(AnimationTarget::UntouchedThisStep)
-///     .update_foreground_color(Color::White)
-///     .update_background_color(Color::Red)
-///     .add_modifier(Modifier::BOLD)
-///     .then()
-///     .build();
-/// let animation_style = AnimationStyleBuilder::default()
-///     .with_repeat_mode(AnimationRepeatMode::Infinite)
-///     .with_advance_mode(AnimationAdvanceMode::Auto)
-///     .with_steps(vec![first_step, second_step])
-///     .build()
-///     .unwrap();
-/// let animation_styles = HashMap::from([(0, animation_style)]);
-///
 /// let symbol_style = SymbolStyleBuilder::default()
 ///     .with_background_color(Color::Gray)
 ///     .with_foreground_color(Color::Blue)
-///     .with_modifier(Modifier::UNDERLINED)
+///     .with_modifier(Modifier::BOLD)
 ///     .build()
 ///     .unwrap();
-/// let symbol_styles = HashMap::from([
-///     (Target::Untouched, symbol_style),
-/// ]);
 /// let text_style = SmallTextStyleBuilder::default()
 ///     .with_text("Text example")
-///     .with_symbol_styles(symbol_styles)
-///     .with_animation_styles(animation_styles)
+///     .for_target(Target::Every(2))
+///     .set_background_color(Color::White)
+///     .set_foreground_color(Color::Red)
+///     .set_modifier(Modifier::UNDERLINE)
+///     .then()
+///     .for_target(Target::Untouched)
+///     .set_style(symbol_style)
+///     .then()
 ///     .build()
 ///     .unwrap();
-///
 /// let text = SmallTextWidget::new(text_style);
 /// ```
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
-pub struct SmallTextWidget<K = u8>
-where
-    K: PartialEq + Eq + Hash,
-{
+pub struct SmallTextWidget {
     symbols: HashMap<u16, Symbol>,
-    active_animation: Option<Animation>,
-    animation_styles: HashMap<K, AnimationStyle>,
 }
 
-impl<K> Widget for &mut SmallTextWidget<K>
-where
-    K: PartialEq + Eq + Hash,
-{
+impl Widget for &mut SmallTextWidget {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let required_width = self.symbols.iter().count() as u16;
-        let available_width = area.width.min(required_width);
+        let available_width =
+            self.symbols.iter().count().min(area.width as usize) as u16;
 
         let virtual_canvas: HashMap<u16, u16> = (0..0 + available_width)
             .zip(area.x..area.x + available_width)
             .collect();
 
-        if self.active_animation.is_some() {
-            let animation_is_ended =
-                self.apply_animation(area.y, buf, &virtual_canvas);
-            if animation_is_ended {
-                self.disable_animation();
-                self.apply_styles(area.y, buf, &virtual_canvas);
-            }
-        } else {
-            self.apply_styles(area.y, buf, &virtual_canvas);
-        }
+        self.apply_styles(area.y, buf, &virtual_canvas);
     }
 }
 
-impl<K> SmallTextWidget<K>
-where
-    K: PartialEq + Eq + Hash,
-{
-    pub fn new(style: SmallTextStyle<K>) -> Self {
+impl SmallTextWidget {
+    pub fn new(style: SmallTextStyle) -> Self {
         let symbols = create_symbols(style.text, style.symbol_styles);
-
-        Self {
-            symbols,
-            active_animation: None,
-            animation_styles: style.animation_styles,
-        }
+        Self { symbols }
     }
 
-    /// Enables the animation associated with the specified key
-    /// if it exists. Replaces any currently active animation
-    /// with the new one.
-    pub fn enable_animation(&mut self, key: &K) {
-        if let Some(style) = self.animation_styles.get(key) {
-            let symbols = self.symbols.clone();
-            let animation = Animation::new(style.clone(), symbols);
-            self.active_animation = Some(animation);
-        }
-    }
-
-    /// Disables the currently active animation, if any;
-    /// otherwise has no effect.
-    pub fn disable_animation(&mut self) {
-        self.active_animation = None;
-    }
-
-    /// Pauses the currently active animation if it is not
-    /// already paused; otherwise has no effect.
-    pub fn pause_animation(&mut self) {
-        self.active_animation.as_mut().map(|a| a.pause());
-    }
-
-    /// Unpauses the currently active animation if it is
-    /// paused; otherwise has no effect.
-    pub fn unpause_animation(&mut self) {
-        self.active_animation.as_mut().map(|a| a.unpause());
-    }
-
-    /// Advances the currently active animation if its advance
-    /// mode is [`AnimationAdvanceMode::Manual`]. Has no effect
-    /// if no animation is active or if it's in automatic mode.
-    pub fn advance_animation(&mut self) {
-        self.active_animation.as_mut().map(|a| a.advance());
+    pub fn mut_symbols(&mut self) -> &mut HashMap<u16, Symbol> {
+        &mut self.symbols
     }
 
     fn apply_styles(
@@ -208,37 +121,11 @@ where
         }
     }
 
-    /// Applies a single animation frame to the buffer. Returns a
-    /// flag indicating whether the animation was finished.
-    fn apply_animation(
-        &mut self,
-        y: u16,
-        buf: &mut Buffer,
-        virtual_canvas: &HashMap<u16, u16>,
-    ) -> bool {
-        let active_animation = match self.active_animation.as_mut() {
-            Some(animation) => animation,
-            None => return true,
-        };
-        let current_frame = match active_animation.next_frame() {
-            Some(frame) => frame,
-            None => return true,
-        };
-
-        for (x, symbol) in current_frame.symbols {
-            if let Some(real_x) = virtual_canvas.get(&x) {
-                self.apply_style(buf, *real_x, y, symbol);
-            }
-        }
-
-        false
-    }
-
     fn apply_style(&self, buf: &mut Buffer, x: u16, y: u16, symbol: Symbol) {
         let ratatui_style = Style::default()
-            .fg(symbol.style.foreground_color)
-            .bg(symbol.style.background_color)
-            .add_modifier(symbol.style.modifier);
+            .fg(symbol.foreground_color)
+            .bg(symbol.background_color)
+            .add_modifier(symbol.modifier);
         buf[(x, y)].set_char(symbol.value).set_style(ratatui_style);
     }
 }

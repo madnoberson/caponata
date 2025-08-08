@@ -62,7 +62,7 @@ pub(crate) struct AnimationFrame {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct Animation {
+pub struct Animation {
     advancable_animation: AdvancableAnimation,
     symbol_states: HashMap<u16, SymbolState>,
     is_paused: bool,
@@ -258,19 +258,19 @@ impl Animation {
                 symbol.value = character;
             }
             AnimationAction::UpdateForegroundColor(color) => {
-                symbol.style.foreground_color = color;
+                symbol.foreground_color = color;
             }
             AnimationAction::UpdateBackgroundColor(color) => {
-                symbol.style.background_color = color;
+                symbol.background_color = color;
             }
             AnimationAction::AddModifier(modifier) => {
-                symbol.style.modifier = symbol.style.modifier.union(modifier);
+                symbol.modifier = symbol.modifier.union(modifier);
             }
             AnimationAction::RemoveModifier(modifier) => {
-                symbol.style.modifier.remove(modifier);
+                symbol.modifier.remove(modifier);
             }
             AnimationAction::RemoveAllModifiers => {
-                symbol.style.modifier = Modifier::empty();
+                symbol.modifier = Modifier::empty();
             }
         }
     }

@@ -1,7 +1,4 @@
-use std::{
-    collections::HashMap,
-    hash::Hash,
-};
+use std::collections::HashMap;
 
 use derive_builder::Builder;
 
@@ -9,7 +6,6 @@ use super::{
     SymbolStyle,
     Target,
 };
-use crate::AnimationStyle;
 
 /// A styling configuration for [`SmallTextWidget`].
 ///
@@ -40,33 +36,19 @@ use crate::AnimationStyle;
 /// ```
 #[derive(Debug, Default, Clone, PartialEq, Eq, Builder)]
 #[builder(setter(prefix = "with", into))]
-pub struct SmallTextStyle<'a, K>
-where
-    K: PartialEq + Eq + Hash,
-{
-    #[builder(default = "\"\"")]
+pub struct SmallTextStyle<'a> {
     pub(crate) text: &'a str,
-
-    #[builder(default)]
     pub(crate) symbol_styles: HashMap<Target, SymbolStyle>,
-
-    #[builder(default)]
-    pub(crate) animation_styles: HashMap<K, AnimationStyle>,
 }
 
-impl<'a, K> SmallTextStyle<'a, K>
-where
-    K: PartialEq + Eq + Hash,
-{
+impl<'a> SmallTextStyle<'a> {
     pub fn new(
         text: &'a str,
         symbol_styles: HashMap<Target, SymbolStyle>,
-        animation_styles: HashMap<K, AnimationStyle>,
     ) -> Self {
         Self {
             text,
             symbol_styles,
-            animation_styles,
         }
     }
 }

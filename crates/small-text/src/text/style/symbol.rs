@@ -25,13 +25,13 @@ use ratatui::style::{
 #[builder(setter(prefix = "with", into))]
 pub struct SymbolStyle {
     #[builder(default)]
-    pub(crate) foreground_color: Color,
+    pub foreground_color: Color,
 
     #[builder(default)]
-    pub(crate) background_color: Color,
+    pub background_color: Color,
 
     #[builder(default)]
-    pub(crate) modifier: Modifier,
+    pub modifier: Modifier,
 }
 
 impl SymbolStyle {
