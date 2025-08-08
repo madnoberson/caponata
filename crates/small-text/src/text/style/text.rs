@@ -1,41 +1,42 @@
 use std::collections::HashMap;
 
-use derive_builder::Builder;
+use ratatui::style::{Color, Modifier};
 
-use super::{
-    SymbolStyle,
-    Target,
-};
+use super::{SymbolStyle, Target};
 
 /// A styling configuration for [`SmallTextWidget`].
 ///
 /// # Example
 ///
 /// ```rust
-/// use std::collections::HashMap;
-///
+/// use ratatui::style::{Color, Modifier};
 /// use ratatui_small_text::{
 ///     Target,
-///     SymbolStyle,
-///     AnimationStyle,
+///     SymbolStyleBuilder,
 ///     SmallTextStyleBuilder,
+///     SmallTextWidget,
 /// };
 ///
-/// let symbol_styles = HashMap::from([
-///     (Target::Untouched, SymbolStyle::default()),
-/// ]);
-/// let animation_styles = HashMap::from([
-///     (1, AnimationStyle::default()),
-/// ]);
+/// let symbol_style = SymbolStyleBuilder::default()
+///     .with_background_color(Color::Gray)
+///     .with_foreground_color(Color::Blue)
+///     .with_modifier(Modifier::BOLD)
+///     .build()
+///     .unwrap();
 /// let text_style = SmallTextStyleBuilder::default()
 ///     .with_text("Text example")
-///     .with_symbol_styles(symbol_styles)
-///     .with_animation_styles(animation_styles)
+///     .for_target(Target::Every(2))
+///     .set_background_color(Color::White)
+///     .set_foreground_color(Color::Red)
+///     .set_modifier(Modifier::UNDERLINE)
+///     .then()
+///     .for_target(Target::Untouched)
+///     .set_style(symbol_style)
+///     .then()
 ///     .build()
 ///     .unwrap();
 /// ```
-#[derive(Debug, Default, Clone, PartialEq, Eq, Builder)]
-#[builder(setter(prefix = "with", into))]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct SmallTextStyle<'a> {
     pub(crate) text: &'a str,
     pub(crate) symbol_styles: HashMap<Target, SymbolStyle>,
@@ -50,5 +51,73 @@ impl<'a> SmallTextStyle<'a> {
             text,
             symbol_styles,
         }
+    }
+}
+
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
+pub struct SmallTextStyleBuilder<'a> {
+    text: Option<&'a str>,
+    symbol_styles: HashMap<Target, SymbolStyle>,
+}
+
+impl<'a> SmallTextStyleBuilder<'a> {
+    pub fn with_text(mut self, text: &'a str) -> Self {
+        self.text = Some(text);
+        self
+    }
+
+    pub fn for_target(self, target: Target) -> SymbolStyleAssembler<'a> {
+        SymbolStyleAssembler {
+            target,
+            text_style_builder: self,
+            background_color: None,
+            foreground_color: None,
+            modifier: None,
+        }
+    }
+
+    pub fn build(self) -> SmallTextStyle<'a> {
+        SmallTextStyle {
+            text: self.text.unwrap_or_default(),
+            symbol_styles: self.symbol_styles,
+        }
+    }
+}
+
+pub struct SymbolStyleAssembler<'a> {
+    target: Target,
+    text_style_builder: SmallTextStyleBuilder<'a>,
+    background_color: Option<Color>,
+    foreground_color: Option<Color>,
+    modifier: Option<Modifier>,
+}
+
+impl<'a> SymbolStyleAssembler<'a> {
+    pub fn set_background_color(mut self, color: Color) -> Self {
+        self.background_color = Some(color);
+        self
+    }
+
+    pub fn set_foreground_color(mut self, color: Color) -> Self {
+        self.foreground_color = Some(color);
+        self
+    }
+
+    pub fn set_modifier(mut self, modifier: Modifier) -> Self {
+        self.modifier = Some(modifier);
+        self
+    }
+
+    pub fn then(mut self) -> SmallTextStyleBuilder<'a> {
+        let symbol_style = SymbolStyle::new(
+            self.foreground_color.unwrap_or_default(),
+            self.background_color.unwrap_or_default(),
+            self.modifier.unwrap_or_default(),
+        );
+        self.text_style_builder
+            .symbol_styles
+            .insert(self.target, symbol_style);
+
+        self.text_style_builder
     }
 }

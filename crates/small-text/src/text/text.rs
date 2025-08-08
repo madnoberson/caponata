@@ -1,28 +1,17 @@
 use std::{
     cmp::Ordering,
-    collections::{
-        HashMap,
-        HashSet,
-    },
+    collections::{HashMap, HashSet},
     fmt::Debug,
 };
 
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
-    style::{
-        Color,
-        Modifier,
-        Style,
-    },
+    style::{Color, Modifier, Style},
     widgets::Widget,
 };
 
-use super::{
-    SmallTextStyle,
-    SymbolStyle,
-    Target,
-};
+use super::{SmallTextStyle, SymbolStyle, Target};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct Symbol {
@@ -48,11 +37,6 @@ impl Symbol {
 /// # Example
 ///
 /// ```rust
-/// use std::{
-///    collections::HashMap,
-///    time::Duration,
-/// };
-///
 /// use ratatui::style::{Color, Modifier};
 /// use ratatui_small_text::{
 ///     Target,
@@ -111,22 +95,22 @@ impl SmallTextWidget {
 
     fn apply_styles(
         &mut self,
-        y: u16,
+        real_y: u16,
         buf: &mut Buffer,
         virtual_canvas: &HashMap<u16, u16>,
     ) {
         for (x, symbol) in self.symbols.iter() {
             let real_x = virtual_canvas.get(x).unwrap();
-            self.apply_style(buf, *real_x, y, *symbol);
-        }
-    }
 
-    fn apply_style(&self, buf: &mut Buffer, x: u16, y: u16, symbol: Symbol) {
-        let ratatui_style = Style::default()
-            .fg(symbol.foreground_color)
-            .bg(symbol.background_color)
-            .add_modifier(symbol.modifier);
-        buf[(x, y)].set_char(symbol.value).set_style(ratatui_style);
+            let ratatui_style = Style::default()
+                .fg(symbol.foreground_color)
+                .bg(symbol.background_color)
+                .add_modifier(symbol.modifier);
+
+            buf[(*real_x, real_y)]
+                .set_char(symbol.value)
+                .set_style(ratatui_style);
+        }
     }
 }
 
@@ -191,6 +175,9 @@ fn targets_sorter(a: Target, b: Target) -> Ordering {
     priority(&a).cmp(&priority(&b))
 }
 
+/// Returns virtual x coordinates resolved from provided
+/// target. Returns empty iterator if provided target is
+/// [`Target::Untouched`].
 fn resolve_target(
     target: Target,
     char_count: u16,

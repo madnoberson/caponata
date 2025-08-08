@@ -1,27 +1,15 @@
-use std::{
-    collections::HashMap,
-    time::Duration,
-};
+use std::{collections::HashMap, time::Duration};
 
-use ratatui::style::{
-    Color,
-    Modifier,
-};
+use ratatui::style::{Color, Modifier};
 
-use super::{
-    AnimationAction,
-    AnimationTarget,
-};
+use super::{AnimationAction, AnimationTarget};
 
 /// A single step in the text animation.
 ///
 /// # Example
 ///
 /// ```rust
-/// use std::{
-///    collections::HashMap,
-///    time::Duration,
-/// };
+/// use std::time::Duration;
 ///
 /// use ratatui::style::{Color, Modifier};
 /// use ratatui_small_text::{
@@ -269,7 +257,7 @@ impl AnimationActionAccumulator {
 /// an [`AnimationStep`] by specifying the duration and a
 /// series of animation actions to be applied to specific
 /// targets. It allows chaining of method calls to build
-/// complex animation steps in a readable manner.
+/// animation step in a readable manner.
 ///
 /// # Example
 ///

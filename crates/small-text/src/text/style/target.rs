@@ -1,6 +1,13 @@
-/// Represents the selection of symbol positions to
-/// which styles should be applied to [`SmallTextWidget`]
-/// when animation is disabled.
+/// Represents the selection of symbol positions to which
+/// styles should be applied to [`SmallTextWidget`].
+///
+/// Applying order:
+///
+/// 1. [`Target::Single`]
+/// 2. [`Target::Range`]
+/// 3. [`Target::Every`]
+/// 4. [`Target::AllExceptEvery`]
+/// 5. [`Target::Untouched`]
 ///
 /// Default variant is [`Target::Untouched`].
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
