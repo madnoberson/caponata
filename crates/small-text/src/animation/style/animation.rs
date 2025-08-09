@@ -11,10 +11,7 @@ use super::{
 /// # Example
 ///
 /// ```rust
-/// use std::{
-///    collections::HashMap,
-///    time::Duration,
-/// };
+/// use std::time::Duration;
 ///
 /// use ratatui::style::{Color, Modifier};
 /// use ratatui_small_text::{

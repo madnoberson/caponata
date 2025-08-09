@@ -2,7 +2,7 @@
 /// which styles should be applied during a specific
 /// step of the animation.
 ///
-/// Priority of applying:
+/// Applying order:
 ///
 /// 1. [`AnimationTarget::Single`]
 /// 2. [`AnimationTarget::Range`]

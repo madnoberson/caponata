@@ -1,17 +1,28 @@
 use std::{
     cmp::Ordering,
-    collections::{HashMap, HashSet},
+    collections::{
+        HashMap,
+        HashSet,
+    },
     fmt::Debug,
 };
 
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
-    style::{Color, Modifier, Style},
+    style::{
+        Color,
+        Modifier,
+        Style,
+    },
     widgets::Widget,
 };
 
-use super::{SmallTextStyle, SymbolStyle, Target};
+use super::{
+    SmallTextStyle,
+    SymbolStyle,
+    Target,
+};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct Symbol {
@@ -61,8 +72,7 @@ impl Symbol {
 ///     .for_target(Target::Untouched)
 ///     .set_style(symbol_style)
 ///     .then()
-///     .build()
-///     .unwrap();
+///     .build();
 /// let text = SmallTextWidget::new(text_style);
 /// ```
 #[derive(Debug, Default, Clone, PartialEq, Eq)]

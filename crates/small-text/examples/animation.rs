@@ -41,12 +41,8 @@ fn run(terminal: &mut DefaultTerminal) -> io::Result<()> {
         .build()
         .unwrap()
         .into();
-    let symbol_styles =
-        HashMap::from([(Target::Untouched, SymbolStyle::default())]);
     let text_style = SmallTextStyleBuilder::default()
         .with_text("Small text!")
-        .with_animation_styles(HashMap::from([(0, animation_style)]))
-        .with_symbol_styles(symbol_styles)
         .build()
         .unwrap();
 

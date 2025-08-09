@@ -1,8 +1,14 @@
 use std::collections::HashMap;
 
-use ratatui::style::{Color, Modifier};
+use ratatui::style::{
+    Color,
+    Modifier,
+};
 
-use super::{SymbolStyle, Target};
+use super::{
+    SymbolStyle,
+    Target,
+};
 
 /// A styling configuration for [`SmallTextWidget`].
 ///
@@ -33,8 +39,7 @@ use super::{SymbolStyle, Target};
 ///     .for_target(Target::Untouched)
 ///     .set_style(symbol_style)
 ///     .then()
-///     .build()
-///     .unwrap();
+///     .build();
 /// ```
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct SmallTextStyle<'a> {
@@ -54,6 +59,37 @@ impl<'a> SmallTextStyle<'a> {
     }
 }
 
+/// A builder for constructing [`SmallTextStyle`].
+///
+/// # Example
+///
+/// ```rust
+/// use ratatui::style::{Color, Modifier};
+/// use ratatui_small_text::{
+///     Target,
+///     SymbolStyleBuilder,
+///     SmallTextStyleBuilder,
+///     SmallTextWidget,
+/// };
+///
+/// let symbol_style = SymbolStyleBuilder::default()
+///     .with_background_color(Color::Gray)
+///     .with_foreground_color(Color::Blue)
+///     .with_modifier(Modifier::BOLD)
+///     .build()
+///     .unwrap();
+/// let text_style = SmallTextStyleBuilder::default()
+///     .with_text("Text example")
+///     .for_target(Target::Every(2))
+///     .set_background_color(Color::White)
+///     .set_foreground_color(Color::Red)
+///     .set_modifier(Modifier::UNDERLINE)
+///     .then()
+///     .for_target(Target::Untouched)
+///     .set_style(symbol_style)
+///     .then()
+///     .build();
+/// ```
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct SmallTextStyleBuilder<'a> {
     text: Option<&'a str>,

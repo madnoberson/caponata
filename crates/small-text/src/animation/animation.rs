@@ -57,8 +57,8 @@ impl Into<SymbolState> for StepSymbolState {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct AnimationFrame {
-    pub(crate) symbols: HashMap<u16, Symbol>,
+pub struct AnimationFrame {
+    pub symbols: HashMap<u16, Symbol>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

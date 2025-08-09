@@ -1,5 +1,4 @@
 use std::{
-    collections::HashMap,
     io,
     time::Duration,
 };
@@ -18,14 +17,8 @@ use ratatui::{
     },
 };
 use ratatui_small_text::{
-    AnimationAdvanceMode,
-    AnimationRepeatMode,
-    AnimationStepBuilder,
-    AnimationStyleBuilder,
-    AnimationTarget,
     SmallTextStyleBuilder,
     SmallTextWidget,
-    SymbolStyle,
     Target,
 };
 
@@ -38,52 +31,25 @@ pub fn main() -> io::Result<()> {
 }
 
 fn run(terminal: &mut DefaultTerminal) -> io::Result<()> {
-    let first_animation_step = AnimationStepBuilder::default()
-        .with_duration(Duration::from_secs(1))
-        .for_target(AnimationTarget::Every(2))
-        .update_foreground_color(Color::White)
-        .update_background_color(Color::Red)
-        .add_modifier(Modifier::BOLD)
-        .then()
-        .for_target(AnimationTarget::AllExceptEvery(2))
-        .update_character('!')
-        .update_foreground_color(Color::Gray)
-        .update_background_color(Color::Blue)
-        .remove_modifier(Modifier::BOLD)
-        .then()
-        .build();
-    let second_animation_step = AnimationStepBuilder::default()
-        .with_duration(Duration::from_secs(1))
-        .for_target(AnimationTarget::AllExceptEvery(2))
-        .update_character('@')
-        .update_foreground_color(Color::White)
-        .update_background_color(Color::Red)
-        .add_modifier(Modifier::BOLD)
-        .then()
-        .for_target(AnimationTarget::Every(2))
-        .update_foreground_color(Color::Gray)
-        .update_background_color(Color::Blue)
-        .remove_modifier(Modifier::BOLD)
-        .then()
-        .build();
-    let animation_style = AnimationStyleBuilder::default()
-        .with_advance_mode(AnimationAdvanceMode::Auto)
-        .with_repeat_mode(AnimationRepeatMode::Infinite)
-        .with_steps([first_animation_step, second_animation_step])
-        .build()
-        .unwrap();
-
-    let symbol_styles =
-        HashMap::from([(Target::Untouched, SymbolStyle::default())]);
     let text_style = SmallTextStyleBuilder::default()
         .with_text("Small text!")
-        .with_animation_styles(HashMap::from([(0, animation_style)]))
-        .with_symbol_styles(symbol_styles)
-        .build()
-        .unwrap();
-
-    let mut text = SmallTextWidget::<u8>::new(text_style);
-    text.enable_animation(&0);
+        .for_target(Target::Every(2))
+        .set_background_color(Color::Blue)
+        .set_foreground_color(Color::Red)
+        .set_modifier(Modifier::UNDERLINED)
+        .then()
+        .for_target(Target::Every(3))
+        .set_background_color(Color::Green)
+        .set_foreground_color(Color::Black)
+        .set_modifier(Modifier::BOLD)
+        .then()
+        .for_target(Target::Untouched)
+        .set_background_color(Color::LightYellow)
+        .set_foreground_color(Color::White)
+        .set_modifier(Modifier::ITALIC)
+        .then()
+        .build();
+    let mut text = SmallTextWidget::new(text_style);
 
     let mut is_running = true;
     while is_running {
