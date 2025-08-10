@@ -34,7 +34,7 @@ use super::{
 ///     .for_target(Target::Every(2))
 ///     .set_background_color(Color::White)
 ///     .set_foreground_color(Color::Red)
-///     .set_modifier(Modifier::UNDERLINE)
+///     .set_modifier(Modifier::UNDERLINED)
 ///     .then()
 ///     .for_target(Target::Untouched)
 ///     .set_style(symbol_style)
@@ -83,7 +83,7 @@ impl<'a> SmallTextStyle<'a> {
 ///     .for_target(Target::Every(2))
 ///     .set_background_color(Color::White)
 ///     .set_foreground_color(Color::Red)
-///     .set_modifier(Modifier::UNDERLINE)
+///     .set_modifier(Modifier::UNDERLINED)
 ///     .then()
 ///     .for_target(Target::Untouched)
 ///     .set_style(symbol_style)
@@ -141,6 +141,13 @@ impl<'a> SymbolStyleAssembler<'a> {
 
     pub fn set_modifier(mut self, modifier: Modifier) -> Self {
         self.modifier = Some(modifier);
+        self
+    }
+
+    pub fn set_style(mut self, style: SymbolStyle) -> Self {
+        self.background_color = Some(style.background_color);
+        self.foreground_color = Some(style.foreground_color);
+        self.modifier = Some(style.modifier);
         self
     }
 

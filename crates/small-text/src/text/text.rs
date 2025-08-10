@@ -67,7 +67,7 @@ impl Symbol {
 ///     .for_target(Target::Every(2))
 ///     .set_background_color(Color::White)
 ///     .set_foreground_color(Color::Red)
-///     .set_modifier(Modifier::UNDERLINE)
+///     .set_modifier(Modifier::UNDERLINED)
 ///     .then()
 ///     .for_target(Target::Untouched)
 ///     .set_style(symbol_style)
