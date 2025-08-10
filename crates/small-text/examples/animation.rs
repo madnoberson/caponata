@@ -15,14 +15,12 @@ use ratatui::{
     style::Color,
 };
 use ratatui_small_text::{
+    AnimatedSmallTextWidget,
+    AnimationAdvanceMode,
+    AnimationRepeatMode,
     AnimationStyle,
-    WaveAnimationStyleBuilder,
-};
-use ratatui_small_text::{
     SmallTextStyleBuilder,
-    SmallTextWidget,
-    SymbolStyle,
-    Target,
+    WaveAnimationStyleBuilder,
 };
 
 pub fn main() -> io::Result<()> {
@@ -38,15 +36,17 @@ fn run(terminal: &mut DefaultTerminal) -> io::Result<()> {
         .with_text_char_count(11 as u16)
         .with_duration(Duration::from_millis(100))
         .with_foreground_color(Color::Red)
+        .with_advance_mode(AnimationAdvanceMode::Auto)
+        .with_repeat_mode(AnimationRepeatMode::Infinite)
         .build()
         .unwrap()
         .into();
     let text_style = SmallTextStyleBuilder::default()
         .with_text("Small text!")
-        .build()
-        .unwrap();
+        .build();
 
-    let mut text = SmallTextWidget::<u8>::new(text_style);
+    let animation_styles = HashMap::from([(0, animation_style)]);
+    let mut text = AnimatedSmallTextWidget::new(text_style, animation_styles);
     text.enable_animation(&0);
 
     let mut is_running = true;

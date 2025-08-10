@@ -68,7 +68,7 @@ where
     /// with the new one.
     pub fn enable_animation(&mut self, key: &K) {
         if let Some(style) = self.animation_styles.get(key) {
-            let text_symbols = self.text.mut_symbols().clone();
+            let text_symbols = self.text.symbols().clone();
             let animation = Animation::new(style.clone(), text_symbols);
             self.active_animation = Some(animation);
         }

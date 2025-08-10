@@ -99,6 +99,10 @@ impl SmallTextWidget {
         Self { symbols }
     }
 
+    pub fn symbols(&self) -> &HashMap<u16, Symbol> {
+        &self.symbols
+    }
+
     pub fn mut_symbols(&mut self) -> &mut HashMap<u16, Symbol> {
         &mut self.symbols
     }
@@ -141,7 +145,7 @@ fn create_symbols(
         .collect();
 
     let mut styled_x_coords: HashSet<u16> = HashSet::new();
-    let mut resolved_symbol_styles = HashMap::new();
+    let mut resolved_symbols: HashMap<u16, Symbol> = HashMap::new();
 
     for (target, style) in symbol_styles.iter() {
         if *target == Target::Untouched {
@@ -150,7 +154,7 @@ fn create_symbols(
         for x in resolve_target(*target, text_char_count) {
             if let Some(symbol_value) = symbol_values.get(&x) {
                 let symbol = Symbol::new(*symbol_value, *style);
-                resolved_symbol_styles.insert(x, symbol);
+                resolved_symbols.insert(x, symbol);
                 styled_x_coords.insert(x);
             };
         }
@@ -166,12 +170,21 @@ fn create_symbols(
             }
             if let Some(symbol_value) = symbol_values.get(&x) {
                 let symbol = Symbol::new(*symbol_value, *style);
-                resolved_symbol_styles.insert(x, symbol);
+                resolved_symbols.insert(x, symbol);
             };
         }
     }
 
-    resolved_symbol_styles
+    for (x, value) in symbol_values {
+        if styled_x_coords.contains(&x) {
+            continue;
+        }
+        let symbol_style = SymbolStyle::default();
+        let symbol = Symbol::new(value, symbol_style);
+        resolved_symbols.insert(x, symbol);
+    }
+
+    resolved_symbols
 }
 
 fn targets_sorter(a: Target, b: Target) -> Ordering {
