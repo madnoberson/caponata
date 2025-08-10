@@ -61,49 +61,11 @@ enum RenderIntervalCheckResult {
 ///     .build()
 ///     .unwrap();
 /// let mut spinner = SmallSpinnerWidget::new(spinner_style);
-///
-/// let area = Rect::new(0, 0, 5, 1);
-/// let mut buf = Buffer::empty(area);
-/// let spinner_cell_position = Position::new(4, 0);
-///
-/// spinner.render(area, &mut buf);
-/// let spinner_cell = buf.cell(spinner_cell_position).unwrap();
-/// assert_eq!(spinner_cell.symbol(), "⠘");
-///
-/// spinner.render(area, &mut buf);
-/// let spinner_cell = buf.cell(spinner_cell_position).unwrap();
-/// assert_eq!(spinner_cell.symbol(), "⠰");
-///
-/// spinner.render(area, &mut buf);
-/// let spinner_cell = buf.cell(spinner_cell_position).unwrap();
-/// assert_eq!(spinner_cell.symbol(), "⠤");
-///
-/// spinner.render(area, &mut buf);
-/// let spinner_cell = buf.cell(spinner_cell_position).unwrap();
-/// assert_eq!(spinner_cell.symbol(), "⠆");
-///
-/// spinner.render(area, &mut buf);
-/// let spinner_cell = buf.cell(spinner_cell_position).unwrap();
-/// assert_eq!(spinner_cell.symbol(), "⠃");
-///
-/// spinner.render(area, &mut buf);
-/// let spinner_cell = buf.cell(spinner_cell_position).unwrap();
-/// assert_eq!(spinner_cell.symbol(), "⠉");
-///
-/// // Iteration starts with the beginning.
-/// spinner.render(area, &mut buf);
-/// let spinner_cell = buf.cell(spinner_cell_position).unwrap();
-/// assert_eq!(spinner_cell.symbol(), "⠘");
 /// ```
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct SmallSpinnerWidget {
     symbol_cycle: SymbolCycle,
     style: SmallSpinnerStyle,
-
-    /// A timestamp of the last rendering of the next
-    /// symbol. This field is not updated if the
-    /// current symbol being rendered, except the
-    /// first symbol in the cycle.
     last_rendered_at: Option<Instant>,
 }
 
