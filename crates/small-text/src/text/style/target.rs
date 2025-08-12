@@ -7,13 +7,12 @@ use std::cmp::Ordering;
 ///
 /// 1. [`Target::Every`]
 /// 2. [`Target::AllExceptEvery`]
-/// 3. [`Target::Single`]
-/// 4. [`Target::Range`]
+/// 3. [`Target::Range`]
+/// 4. [`Target::Single`]
 /// 5. [`Target::Untouched`]
 ///
 /// Default variant is [`Target::Untouched`].
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
-#[non_exhaustive]
 pub enum Target {
     /// A specific position of a single symbol. This
     /// is a virtual X coordinate representing the

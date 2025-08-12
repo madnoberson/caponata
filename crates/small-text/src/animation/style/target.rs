@@ -15,7 +15,6 @@ use std::cmp::Ordering;
 ///
 /// Default variant is [`AnimationTarget::Untouched`].
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
-#[non_exhaustive]
 pub enum AnimationTarget {
     /// A specific position of a single symbol. This
     /// is a virtual X coordinate representing the

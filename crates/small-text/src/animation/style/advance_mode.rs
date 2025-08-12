@@ -4,18 +4,15 @@
 ///
 /// Default variant is [`AnimationAdvanceMode::Auto`].
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
-#[non_exhaustive]
 pub enum AnimationAdvanceMode {
     /// The animation advances automatically on every
-    /// [`SmallTextWidget::render`] method call, if
-    /// the current step has lasted long enough.
+    /// `render` method call, if the current step has
+    /// lasted long enough.
     #[default]
     Auto,
 
-    /// The animation advances on every
-    /// [`SmallTextWidget::render`] method call only
-    /// if [`SmallTextWidget::advance_animation`]
-    /// method was called beforehand and the current
-    /// step has lasted long enough.
+    /// The animation advances on every `render` method
+    /// call only if `advance` method was called beforehand
+    /// and the current step has lasted long enough.
     Manual,
 }
