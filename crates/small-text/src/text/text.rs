@@ -1,5 +1,4 @@
 use std::{
-    cmp::Ordering,
     collections::{
         HashMap,
         HashSet,
@@ -22,6 +21,7 @@ use super::{
     SmallTextStyle,
     SymbolStyle,
     Target,
+    targets_sorter,
 };
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
@@ -185,17 +185,6 @@ fn create_symbols(
     }
 
     resolved_symbols
-}
-
-fn targets_sorter(a: Target, b: Target) -> Ordering {
-    let priority = |item: &Target| match item {
-        Target::Single(_) => 4,
-        Target::Range(_, _) => 3,
-        Target::Every(_) => 2,
-        Target::AllExceptEvery(_) => 1,
-        Target::Untouched => 0,
-    };
-    priority(&a).cmp(&priority(&b))
 }
 
 /// Returns virtual x coordinates resolved from provided

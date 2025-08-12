@@ -1,13 +1,15 @@
+use std::cmp::Ordering;
+
 /// Represents the selection of symbol positions to
 /// which styles should be applied during a specific
 /// step of the animation.
 ///
 /// Applying order:
 ///
-/// 1. [`AnimationTarget::Single`]
-/// 2. [`AnimationTarget::Range`]
-/// 3. [`AnimationTarget::Every`]
-/// 4. [`AnimationTarget::AllExceptEvery`]
+/// 1. [`AnimationTarget::Every`]
+/// 2. [`AnimationTarget::AllExceptEvery`]
+/// 3. [`AnimationTarget::Range`]
+/// 4. [`AnimationTarget::Single`]
 /// 5. [`AnimationTarget::Untouched`]
 /// 6. [`AnimationTarget::UntouchedThisStep`]
 ///
@@ -45,4 +47,19 @@ pub enum AnimationTarget {
     /// Positions of symbols that were not affected
     /// by styling during the current animation step.
     UntouchedThisStep,
+}
+
+pub(crate) fn animation_targets_sorter(
+    a: AnimationTarget,
+    b: AnimationTarget,
+) -> Ordering {
+    let priority = |item: &AnimationTarget| match item {
+        AnimationTarget::Every(_) => 5,
+        AnimationTarget::AllExceptEvery(_) => 4,
+        AnimationTarget::Single(_) => 3,
+        AnimationTarget::Range(_, _) => 2,
+        AnimationTarget::Untouched => 1,
+        AnimationTarget::UntouchedThisStep => 0,
+    };
+    priority(&a).cmp(&priority(&b))
 }

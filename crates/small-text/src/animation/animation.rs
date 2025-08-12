@@ -1,5 +1,4 @@
 use std::{
-    cmp::Ordering,
     collections::HashMap,
     time::Instant,
 };
@@ -12,6 +11,7 @@ use super::{
     AnimationStep,
     AnimationStyle,
     AnimationTarget,
+    animation_targets_sorter,
 };
 use crate::Symbol;
 
@@ -151,7 +151,7 @@ impl Animation {
 
         let mut actions: Vec<(AnimationTarget, Vec<AnimationAction>)> =
             step.actions.into_iter().collect();
-        actions.sort_by(|a, b| targets_sorter(a.0, b.0));
+        actions.sort_by(|a, b| animation_targets_sorter(a.0, b.0));
 
         for (target, actions) in actions {
             let x_coords = self.calculate_x_coords(target, &step_states);
@@ -274,16 +274,4 @@ impl Animation {
             }
         }
     }
-}
-
-fn targets_sorter(a: AnimationTarget, b: AnimationTarget) -> Ordering {
-    let priority = |item: &AnimationTarget| match item {
-        AnimationTarget::Single(_) => 5,
-        AnimationTarget::Range(_, _) => 4,
-        AnimationTarget::Every(_) => 3,
-        AnimationTarget::AllExceptEvery(_) => 2,
-        AnimationTarget::Untouched => 1,
-        AnimationTarget::UntouchedThisStep => 0,
-    };
-    priority(&a).cmp(&priority(&b))
 }

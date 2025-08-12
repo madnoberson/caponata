@@ -1,12 +1,14 @@
+use std::cmp::Ordering;
+
 /// Represents the selection of symbol positions to which
 /// styles should be applied to [`SmallTextWidget`].
 ///
 /// Applying order:
 ///
-/// 1. [`Target::Single`]
-/// 2. [`Target::Range`]
-/// 3. [`Target::Every`]
-/// 4. [`Target::AllExceptEvery`]
+/// 1. [`Target::Every`]
+/// 2. [`Target::AllExceptEvery`]
+/// 3. [`Target::Single`]
+/// 4. [`Target::Range`]
 /// 5. [`Target::Untouched`]
 ///
 /// Default variant is [`Target::Untouched`].
@@ -39,4 +41,15 @@ pub enum Target {
     /// by styling.
     #[default]
     Untouched,
+}
+
+pub(crate) fn targets_sorter(a: Target, b: Target) -> Ordering {
+    let priority = |item: &Target| match item {
+        Target::Every(_) => 4,
+        Target::AllExceptEvery(_) => 3,
+        Target::Range(_, _) => 2,
+        Target::Single(_) => 1,
+        Target::Untouched => 0,
+    };
+    priority(&a).cmp(&priority(&b))
 }
