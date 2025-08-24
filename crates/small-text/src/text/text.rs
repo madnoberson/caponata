@@ -134,6 +134,9 @@ fn create_symbols(
 ) -> HashMap<u16, Symbol> {
     let text_char_count = text.chars().count() as u16;
 
+    let mut symbol_styles = symbol_styles.clone();
+    let style_for_untouched = symbol_styles.remove(&Target::Untouched);
+
     let mut symbol_styles: Vec<(Target, SymbolStyle)> =
         symbol_styles.into_iter().collect();
     symbol_styles.sort_by(|a, b| targets_sorter(a.0, b.0));
@@ -148,40 +151,37 @@ fn create_symbols(
     let mut resolved_symbols: HashMap<u16, Symbol> = HashMap::new();
 
     for (target, style) in symbol_styles.iter() {
-        if *target == Target::Untouched {
-            continue;
-        }
-        for x in resolve_target(*target, text_char_count) {
-            if let Some(symbol_value) = symbol_values.get(&x) {
-                let symbol = Symbol::new(*symbol_value, *style);
-                resolved_symbols.insert(x, symbol);
-                styled_x_coords.insert(x);
-            };
+        let resolved_symbol_coords: Vec<u16> =
+            resolve_target(*target, text_char_count).collect();
+        let resolved_symbol_values = symbol_values
+            .iter()
+            .filter(|(x, _)| resolved_symbol_coords.contains(x));
+
+        for (x, value) in resolved_symbol_values {
+            let symbol = Symbol::new(*value, *style);
+            resolved_symbols.insert(*x, symbol);
+            styled_x_coords.insert(*x);
         }
     }
 
-    for (target, style) in symbol_styles.iter() {
-        if *target != Target::Untouched {
-            continue;
-        }
-        for x in 0..text_char_count {
-            if styled_x_coords.contains(&x) {
-                continue;
-            }
-            if let Some(symbol_value) = symbol_values.get(&x) {
-                let symbol = Symbol::new(*symbol_value, *style);
-                resolved_symbols.insert(x, symbol);
-            };
-        }
-    }
+    let untouched_symbol_coords: Vec<u16> = (0..text_char_count)
+        .filter(|&x| !styled_x_coords.contains(&x))
+        .collect();
+    let untouched_symbol_values = symbol_values
+        .iter()
+        .filter(|(x, _)| untouched_symbol_coords.contains(x));
 
-    for (x, value) in symbol_values {
-        if styled_x_coords.contains(&x) {
-            continue;
+    if let Some(style) = style_for_untouched {
+        for (x, value) in untouched_symbol_values {
+            let symbol = Symbol::new(*value, style);
+            resolved_symbols.insert(*x, symbol);
         }
-        let symbol_style = SymbolStyle::default();
-        let symbol = Symbol::new(value, symbol_style);
-        resolved_symbols.insert(x, symbol);
+    } else {
+        for (x, value) in untouched_symbol_values {
+            let symbol_style = SymbolStyle::default();
+            let symbol = Symbol::new(*value, symbol_style);
+            resolved_symbols.insert(*x, symbol);
+        }
     }
 
     resolved_symbols
