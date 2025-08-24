@@ -188,8 +188,7 @@ fn create_symbols(
 }
 
 /// Returns virtual x coordinates resolved from provided
-/// target. Returns empty iterator if provided target is
-/// [`Target::Untouched`].
+/// target. Panics if provided target is [`Target::Untouched`].
 fn resolve_target(
     target: Target,
     char_count: u16,
@@ -201,6 +200,6 @@ fn resolve_target(
         Target::Range(start, end) => Box::new(start..end),
         Target::Every(n) => Box::new(all.step_by(n as usize)),
         Target::AllExceptEvery(n) => Box::new(all.filter(move |x| x % n != 0)),
-        Target::Untouched => Box::new(std::iter::empty()),
+        Target::Untouched => unreachable!(),
     }
 }
