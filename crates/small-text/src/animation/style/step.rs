@@ -76,7 +76,7 @@ impl AnimationStep {
 /// ```rust
 /// use std::time::Duration;
 ///
-/// use ratatui::style::Color;
+/// use ratatui::style::{Color, Modifier};
 /// use ratatui_small_text::{
 ///     AnimationTarget,
 ///     AnimationAction,

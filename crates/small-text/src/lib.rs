@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+
 #[cfg(feature = "animation")]
 pub mod animation;
 pub mod text;

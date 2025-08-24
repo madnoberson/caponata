@@ -17,6 +17,95 @@ use crate::{
     SmallTextWidget,
 };
 
+/// Provides a high-level API for working with animated
+/// [`SmallTextWidget`] without the need for manual
+/// animation control.
+///
+/// If you require full control over the underlying
+/// animation mechanisms, consider using [`SmallTextWidget`]
+/// and [`Animation`] separately.
+///
+/// This struct combines [`SmallTextWidget`] and [`Animation`]
+/// into a single integrated component that handles
+/// animation automatically.
+///
+/// # Example
+///
+/// ```rust
+/// use std::{
+///     time::Duration,
+///     collections::HashMap,
+/// };
+///
+/// use ratatui::style::{Color, Modifier};
+/// use ratatui_small_text::{
+///     Target,
+///     AnimationTarget,
+///     SymbolStyleBuilder,
+///     AnimationAdvanceMode,
+///     AnimationRepeatMode,
+///     AnimationStepBuilder,
+///     AnimationStyleBuilder,
+///     SmallTextStyleBuilder,
+///     AnimatedSmallTextWidget,
+/// };
+///
+/// let first_step = AnimationStepBuilder::default()
+///     .with_duration(Duration::from_millis(100))
+///     .for_target(AnimationTarget::Every(2))
+///     .update_foreground_color(Color::White)
+///     .update_background_color(Color::Green)
+///     .add_modifier(Modifier::BOLD)
+///     .then()
+///     .for_target(AnimationTarget::UntouchedThisStep)
+///     .update_foreground_color(Color::Gray)
+///     .update_background_color(Color::Blue)
+///     .remove_all_modifiers()
+///     .then()
+///     .build();
+/// let second_step = AnimationStepBuilder::default()
+///     .with_duration(Duration::from_millis(100))
+///     .for_target(AnimationTarget::Every(2))
+///     .update_foreground_color(Color::Gray)
+///     .update_background_color(Color::Blue)
+///     .add_modifier(Modifier::BOLD)
+///     .then()
+///     .for_target(AnimationTarget::UntouchedThisStep)
+///     .update_foreground_color(Color::White)
+///     .update_background_color(Color::Green)
+///     .remove_all_modifiers()
+///     .then()
+///     .build();
+/// let animation_style = AnimationStyleBuilder::default()
+///     .with_advance_mode(AnimationAdvanceMode::Auto)
+///     .with_repeat_mode(AnimationRepeatMode::Finite(1))
+///     .with_steps(vec![first_step, second_step])
+///     .build()
+///     .unwrap();
+///
+/// let symbol_style = SymbolStyleBuilder::default()
+///     .with_background_color(Color::Gray)
+///     .with_foreground_color(Color::Blue)
+///     .with_modifier(Modifier::BOLD)
+///     .build()
+///     .unwrap();
+/// let text_style = SmallTextStyleBuilder::default()
+///     .with_text("Text example")
+///     .for_target(Target::Every(2))
+///     .set_background_color(Color::White)
+///     .set_foreground_color(Color::Red)
+///     .set_modifier(Modifier::UNDERLINED)
+///     .then()
+///     .for_target(Target::Untouched)
+///     .set_style(symbol_style)
+///     .then()
+///     .build();
+///
+/// let animated_text = AnimatedSmallTextWidget::new(
+///     text_style,
+///     HashMap::from([(0, animation_style)]),
+/// );
+/// ```
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct AnimatedSmallTextWidget<K>
 where

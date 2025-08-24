@@ -61,6 +61,93 @@ pub struct AnimationFrame {
     pub symbols: HashMap<u16, Symbol>,
 }
 
+/// Provides a high-level API of working with animations
+/// for [`SmallTextWidget`] with full control over
+/// behavior.
+///
+/// If you don't need manual control of the animation
+/// mechanisms, consider using [`AnimatedSmallTextWidget`],
+/// which combines [`SmallTextWidget`] and [`Animation`]
+/// into a single struct.
+///
+/// # Example
+///
+/// ```rust
+/// use std::time::Duration;
+///
+/// use ratatui::style::{Color, Modifier};
+/// use ratatui_small_text::{
+///     Symbol,
+///     AnimationTarget,
+///     AnimationAdvanceMode,
+///     AnimationRepeatMode,
+///     AnimationStepBuilder,
+///     AnimationStyleBuilder,
+///     Animation,
+/// };
+///
+/// let first_step = AnimationStepBuilder::default()
+///     .with_duration(Duration::from_millis(100))
+///     .for_target(AnimationTarget::Every(2))
+///     .update_foreground_color(Color::White)
+///     .update_background_color(Color::Green)
+///     .add_modifier(Modifier::BOLD)
+///     .then()
+///     .for_target(AnimationTarget::UntouchedThisStep)
+///     .update_foreground_color(Color::Gray)
+///     .update_background_color(Color::Blue)
+///     .remove_all_modifiers()
+///     .then()
+///     .build();
+/// let second_step = AnimationStepBuilder::default()
+///     .with_duration(Duration::from_millis(100))
+///     .for_target(AnimationTarget::Every(2))
+///     .update_foreground_color(Color::Gray)
+///     .update_background_color(Color::Blue)
+///     .add_modifier(Modifier::BOLD)
+///     .then()
+///     .for_target(AnimationTarget::UntouchedThisStep)
+///     .update_foreground_color(Color::White)
+///     .update_background_color(Color::Green)
+///     .remove_all_modifiers()
+///     .then()
+///     .build();
+/// let animation_style = AnimationStyleBuilder::default()
+///     .with_advance_mode(AnimationAdvanceMode::Auto)
+///     .with_repeat_mode(AnimationRepeatMode::Finite(1))
+///     .with_steps(vec![first_step, second_step])
+///     .build()
+///     .unwrap();
+///
+/// let symbols = HashMap::from([
+///     (0, Symbol::default()),
+///     (1, Symbol::default()),
+///     (2, Symbol::default()),
+/// ]);
+/// let mut animation = Animation::new(animation_style, symbols);
+///
+/// // Returns next frame of the animation.
+/// let first_frame = animation.next_frame().unwrap();
+///
+/// // Pause the animation.
+/// animation.pause()
+///
+/// // Returns the same frame as before because animation
+/// // is paused.
+/// let second_frame = animation.next_frame().unwrap();
+/// assert_eq!(first_frame, second_frame);
+///
+/// // Resume the animation.
+/// animation.unpause();
+///
+/// // Returns a new frame since animation resumed.
+/// let third_frame = animation.next_frame().unwrap();
+/// assert_ne!(second_frame, third_frame);
+///
+/// // Returns None when animation reaches the end.
+/// let fourth_frame = animation.next_frame();
+/// assert_eq!(fourth_frame, None);
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Animation {
     advancable_animation: AdvancableAnimation,

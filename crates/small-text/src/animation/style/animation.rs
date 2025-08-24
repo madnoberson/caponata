@@ -51,6 +51,7 @@ use super::{
 ///     .with_advance_mode(AnimationAdvanceMode::Auto)
 ///     .with_steps(vec![first_step, second_step])
 ///     .build();
+/// ```
 #[derive(Debug, Default, Clone, PartialEq, Eq, Builder)]
 #[builder(setter(prefix = "with", into))]
 pub struct AnimationStyle {
