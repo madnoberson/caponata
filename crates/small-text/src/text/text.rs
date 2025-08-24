@@ -135,7 +135,7 @@ fn create_symbols(
     let text_char_count = text.chars().count() as u16;
 
     let mut symbol_styles = symbol_styles.clone();
-    let style_for_untouched = symbol_styles.remove(&Target::Untouched);
+    let untouched_symbols_style = symbol_styles.remove(&Target::Untouched);
 
     let mut symbol_styles: Vec<(Target, SymbolStyle)> =
         symbol_styles.into_iter().collect();
@@ -171,7 +171,7 @@ fn create_symbols(
         .iter()
         .filter(|(x, _)| untouched_symbol_coords.contains(x));
 
-    if let Some(style) = style_for_untouched {
+    if let Some(style) = untouched_symbols_style {
         for (x, value) in untouched_symbol_values {
             let symbol = Symbol::new(*value, style);
             resolved_symbols.insert(*x, symbol);

@@ -32,8 +32,10 @@ pub fn main() -> io::Result<()> {
 }
 
 fn run(terminal: &mut DefaultTerminal) -> io::Result<()> {
+    let text = "Small text!";
+
     let animation_style: AnimationStyle = WaveAnimationStyleBuilder::default()
-        .with_text_char_count(11 as u16)
+        .with_text_char_count(text.chars().count() as u16)
         .with_duration(Duration::from_millis(100))
         .with_foreground_color(Color::Red)
         .with_advance_mode(AnimationAdvanceMode::Auto)
@@ -41,9 +43,7 @@ fn run(terminal: &mut DefaultTerminal) -> io::Result<()> {
         .build()
         .unwrap()
         .into();
-    let text_style = SmallTextStyleBuilder::default()
-        .with_text("Small text!")
-        .build();
+    let text_style = SmallTextStyleBuilder::default().with_text(text).build();
 
     let animation_styles = HashMap::from([(0, animation_style)]);
     let mut text = AnimatedSmallTextWidget::new(text_style, animation_styles);

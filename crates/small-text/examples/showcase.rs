@@ -48,7 +48,7 @@ fn run(terminal: &mut DefaultTerminal) -> io::Result<()> {
         .set_foreground_color(Color::Rgb(208, 135, 112))
         .then()
         .for_target(Target::Untouched)
-        .set_background_color(Color::Rgb(236, 239, 244))
+        .set_background_color(Color::Rgb(84, 90, 112))
         .set_foreground_color(Color::Rgb(67, 76, 94))
         .set_modifier(Modifier::DIM)
         .then()
