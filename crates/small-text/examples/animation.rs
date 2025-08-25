@@ -20,6 +20,7 @@ use ratatui_small_text::{
     AnimationRepeatMode,
     AnimationStyle,
     SmallTextStyleBuilder,
+    TickerAnimationStyleBuilder,
     WaveAnimationStyleBuilder,
 };
 
@@ -34,18 +35,27 @@ pub fn main() -> io::Result<()> {
 fn run(terminal: &mut DefaultTerminal) -> io::Result<()> {
     let text = "Small text!";
 
-    let animation_style: AnimationStyle = WaveAnimationStyleBuilder::default()
-        .with_text_char_count(text.chars().count() as u16)
-        .with_duration(Duration::from_millis(100))
-        .with_foreground_color(Color::Red)
-        .with_advance_mode(AnimationAdvanceMode::Auto)
-        .with_repeat_mode(AnimationRepeatMode::Infinite)
-        .build()
-        .unwrap()
-        .into();
+    let wave_animation_style: AnimationStyle =
+        WaveAnimationStyleBuilder::default()
+            .with_text_char_count(text.chars().count() as u16)
+            .with_duration(Duration::from_millis(100))
+            .with_foreground_color(Color::Red)
+            .with_advance_mode(AnimationAdvanceMode::Auto)
+            .with_repeat_mode(AnimationRepeatMode::Infinite)
+            .build()
+            .unwrap()
+            .into();
+    let ticker_animation_style: AnimationStyle =
+        TickerAnimationStyleBuilder::default()
+            .with_text(text)
+            .with_advance_mode(AnimationAdvanceMode::Auto)
+            .with_repeat_mode(AnimationRepeatMode::Infinite)
+            .build()
+            .unwrap()
+            .into();
     let text_style = SmallTextStyleBuilder::default().with_text(text).build();
 
-    let animation_styles = HashMap::from([(0, animation_style)]);
+    let animation_styles = HashMap::from([(0, ticker_animation_style)]);
     let mut text = AnimatedSmallTextWidget::new(text_style, animation_styles);
     text.enable_animation(&0);
 

@@ -17,6 +17,7 @@ strum = { version = "0.27.*", optional = true }
 crossterm = { version = "0.29.*", optional = true }
 
 [features]
+all = ["strum", "examples"]
 default = []
 strum = ["dep:strum", "dep:strum_macros"]
 examples = ["dep:crossterm", "strum", "ratatui/crossterm"]

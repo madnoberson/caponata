@@ -17,7 +17,6 @@ use strum_macros::{
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "strum", derive(AsRefStr, EnumIter))]
 #[cfg_attr(feature = "strum", strum(serialize_all = "snake_case"))]
-#[non_exhaustive]
 pub enum SmallSpinnerType {
     /// ["|", "/", "-", "\\"]
     Ascii,
