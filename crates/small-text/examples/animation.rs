@@ -21,6 +21,7 @@ use ratatui_small_text::{
     AnimationStyle,
     SmallTextStyleBuilder,
     TickerAnimationStyleBuilder,
+    TickerDirection,
     WaveAnimationStyleBuilder,
 };
 
@@ -48,6 +49,8 @@ fn run(terminal: &mut DefaultTerminal) -> io::Result<()> {
     let ticker_animation_style: AnimationStyle =
         TickerAnimationStyleBuilder::default()
             .with_text(text)
+            .with_direction(TickerDirection::Backward)
+            .with_duration(Duration::from_millis(200))
             .with_advance_mode(AnimationAdvanceMode::Auto)
             .with_repeat_mode(AnimationRepeatMode::Infinite)
             .build()

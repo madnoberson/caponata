@@ -1,5 +1,8 @@
 use std::{
-    collections::HashMap,
+    collections::{
+        HashMap,
+        VecDeque,
+    },
     time::Duration,
 };
 
@@ -15,10 +18,20 @@ use crate::{
     AnimationTarget,
 };
 
-#[derive(Builder)]
-#[builder(setter(prefix = "with", into, strip_option))]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum TickerDirection {
+    #[default]
+    Forward,
+    Backward,
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Builder)]
+#[builder(setter(prefix = "with", into))]
 pub struct TickerAnimationStyle<'a> {
     text: &'a str,
+
+    #[builder(default)]
+    direction: TickerDirection,
 
     #[builder(default)]
     duration: Duration,
@@ -33,12 +46,17 @@ pub struct TickerAnimationStyle<'a> {
 impl<'a> Into<AnimationStyle> for TickerAnimationStyle<'a> {
     fn into(self) -> AnimationStyle {
         let mut steps: Vec<AnimationStep> = Vec::new();
-        let mut text_chars: Vec<char> = self.text.chars().collect();
+        let mut text_chars: VecDeque<char> = self.text.chars().collect();
         let mut current_index = (self.text.chars().count() - 1) as i16;
 
         while current_index >= 0 {
-            let last_char = text_chars.pop().unwrap();
-            text_chars.insert(0, last_char);
+            if self.direction == TickerDirection::Forward {
+                let last_char = text_chars.pop_back().unwrap();
+                text_chars.push_front(last_char);
+            } else {
+                let last_char = text_chars.pop_front().unwrap();
+                text_chars.push_back(last_char);
+            };
             current_index -= 1;
 
             let mut actions: HashMap<AnimationTarget, Vec<AnimationAction>> =

@@ -19,7 +19,7 @@ use crate::{
     AnimationTarget,
 };
 
-#[derive(Builder)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Builder)]
 #[builder(setter(prefix = "with", into, strip_option))]
 pub struct WaveAnimationStyle {
     text_char_count: u16,
