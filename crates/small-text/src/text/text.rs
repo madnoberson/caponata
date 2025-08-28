@@ -6,6 +6,12 @@ use std::{
     fmt::Debug,
 };
 
+#[cfg(feature = "crossterm")]
+use crossterm::event::{
+    Event,
+    MouseButton,
+    MouseEventKind,
+};
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
@@ -17,6 +23,8 @@ use ratatui::{
     widgets::Widget,
 };
 
+#[cfg(feature = "crossterm")]
+use super::SmallTextEvent;
 use super::{
     SmallTextStyle,
     SymbolStyle,
@@ -78,6 +86,11 @@ impl Symbol {
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct SmallTextWidget {
     symbols: HashMap<u16, Symbol>,
+
+    #[cfg(feature = "crossterm")]
+    pressed_buttons: HashSet<MouseButton>,
+    #[cfg(feature = "crossterm")]
+    is_hovered: bool,
 }
 
 impl Widget for &mut SmallTextWidget {
@@ -94,11 +107,6 @@ impl Widget for &mut SmallTextWidget {
 }
 
 impl SmallTextWidget {
-    pub fn new(style: SmallTextStyle) -> Self {
-        let symbols = create_symbols(style.text, style.symbol_styles);
-        Self { symbols }
-    }
-
     pub fn symbols(&self) -> &HashMap<u16, Symbol> {
         &self.symbols
     }
@@ -125,6 +133,114 @@ impl SmallTextWidget {
                 .set_char(symbol.value)
                 .set_style(ratatui_style);
         }
+    }
+}
+
+#[cfg(not(feature = "crossterm"))]
+impl SmallTextWidget {
+    pub fn new(style: SmallTextStyle) -> Self {
+        let symbols = create_symbols(style.text, style.symbol_styles);
+        Self { symbols }
+    }
+}
+
+#[cfg(feature = "crossterm")]
+impl SmallTextWidget {
+    pub fn new(style: SmallTextStyle) -> Self {
+        let symbols = create_symbols(style.text, style.symbol_styles);
+
+        Self {
+            symbols,
+            pressed_buttons: HashSet::new(),
+            is_hovered: false,
+        }
+    }
+
+    pub fn handle_event(
+        &mut self,
+        event: Event,
+        area: Rect,
+    ) -> Option<SmallTextEvent> {
+        let available_width =
+            self.symbols.iter().count().min(area.width as usize) as u16;
+
+        let virtual_canvas: HashMap<u16, u16> = (area.x
+            ..area.x + available_width)
+            .zip(0..0 + available_width)
+            .collect();
+
+        let mouse_event = if let Event::Mouse(mouse_event) = event {
+            mouse_event
+        } else {
+            return None;
+        };
+
+        let symbol =
+            if let Some(virtual_x) = virtual_canvas.get(&mouse_event.column) {
+                self.symbols.get(virtual_x).copied()
+            } else {
+                None
+            };
+
+        match mouse_event.kind {
+            MouseEventKind::Moved => self.on_mouse_moved(symbol),
+            MouseEventKind::Down(button) => {
+                self.on_mouse_button_down(symbol, button)
+            }
+            MouseEventKind::Up(button) => {
+                self.on_mouse_button_up(symbol, button)
+            }
+            _ => None,
+        }
+    }
+
+    fn on_mouse_moved(
+        &mut self,
+        symbol: Option<Symbol>,
+    ) -> Option<SmallTextEvent> {
+        if let Some(hovered_symbol) = symbol {
+            if !self.is_hovered {
+                self.is_hovered = true;
+                SmallTextEvent::Hovered(hovered_symbol).into()
+            } else {
+                SmallTextEvent::HoveredSymbolChanged(hovered_symbol).into()
+            }
+        } else {
+            if self.is_hovered {
+                self.is_hovered = false;
+                SmallTextEvent::Unhovered.into()
+            } else {
+                None
+            }
+        }
+    }
+
+    fn on_mouse_button_down(
+        &mut self,
+        symbol: Option<Symbol>,
+        pressed_button: MouseButton,
+    ) -> Option<SmallTextEvent> {
+        if let Some(pressed_symbol) = symbol
+            && !self.pressed_buttons.contains(&pressed_button)
+        {
+            self.pressed_buttons.insert(pressed_button);
+            return SmallTextEvent::Pressed(pressed_symbol).into();
+        }
+        None
+    }
+
+    fn on_mouse_button_up(
+        &mut self,
+        symbol: Option<Symbol>,
+        released_button: MouseButton,
+    ) -> Option<SmallTextEvent> {
+        if let Some(released_symbol) = symbol
+            && self.pressed_buttons.contains(&released_button)
+        {
+            self.pressed_buttons.remove(&released_button);
+            return SmallTextEvent::Released(released_symbol).into();
+        }
+        None
     }
 }
 

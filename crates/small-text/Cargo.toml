@@ -15,14 +15,14 @@ derive_builder = "0.20.*"
 crossterm = { version = "0.29.*", optional = true }
 
 [features]
-all = ["examples", "animation"]
+all = ["crossterm", "animation"]
 animation = []
-examples = ["dep:crossterm", "ratatui/crossterm"]
+crossterm = ["dep:crossterm", "ratatui/crossterm"]
 
 [[example]]
 name = "showcase"
-required-features = ["examples"]
+required-features = ["crossterm"]
 
 [[example]]
 name = "animation"
-required-features = ["examples", "animation"]
+required-features = ["crossterm", "animation"]
