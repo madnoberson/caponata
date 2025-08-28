@@ -32,7 +32,6 @@ use ratatui_small_spinner::{
     SmallSpinnerType,
     SmallSpinnerWidget,
 };
-use strum::IntoEnumIterator;
 
 pub fn main() -> io::Result<()> {
     let mut terminal = ratatui::init();
@@ -127,10 +126,7 @@ fn make_spinners() -> Vec<(String, SmallSpinnerWidget)> {
         .with_interval(Duration::from_millis(100));
 
     let mut spinners = Vec::new();
-
-    let mut spinner_types: Vec<SmallSpinnerType> =
-        SmallSpinnerType::iter().collect();
-    spinner_types.sort_by(|a, b| a.as_ref().cmp(b.as_ref()));
+    let spinner_types = get_spinner_types();
 
     for spinner_type in spinner_types {
         let spinner_style = spinner_style_builder_ref
@@ -139,10 +135,72 @@ fn make_spinners() -> Vec<(String, SmallSpinnerWidget)> {
             .unwrap();
         let spinner = SmallSpinnerWidget::new(spinner_style);
 
-        spinners.push((spinner_type.as_ref().to_string(), spinner));
+        let spinner_name = get_spinner_name(spinner_type);
+        spinners.push((spinner_name, spinner));
     }
 
     spinners
+}
+
+fn get_spinner_types() -> [SmallSpinnerType; 25] {
+    [
+        SmallSpinnerType::Arrow,
+        SmallSpinnerType::Ascii,
+        SmallSpinnerType::BlackCircle,
+        SmallSpinnerType::BoxDrawing,
+        SmallSpinnerType::BrailleDouble,
+        SmallSpinnerType::BrailleEight,
+        SmallSpinnerType::BrailleEightDouble,
+        SmallSpinnerType::BrailleOne,
+        SmallSpinnerType::BrailleSix,
+        SmallSpinnerType::BrailleSixDouble,
+        SmallSpinnerType::Canadian,
+        SmallSpinnerType::Clock,
+        SmallSpinnerType::DoubleArrow,
+        SmallSpinnerType::HorizontalBlock,
+        SmallSpinnerType::MoonPhases,
+        SmallSpinnerType::OghamA,
+        SmallSpinnerType::OghamB,
+        SmallSpinnerType::OghamC,
+        SmallSpinnerType::Parenthesis,
+        SmallSpinnerType::QuadrantBlock,
+        SmallSpinnerType::QuadrantBlockCrack,
+        SmallSpinnerType::TriangleCorners,
+        SmallSpinnerType::VerticalBlock,
+        SmallSpinnerType::WhiteCircle,
+        SmallSpinnerType::WhiteSquare,
+    ]
+}
+
+fn get_spinner_name(spinner_type: SmallSpinnerType) -> String {
+    match spinner_type {
+        SmallSpinnerType::Arrow => "arrow",
+        SmallSpinnerType::Ascii => "ascii",
+        SmallSpinnerType::BlackCircle => "black circle",
+        SmallSpinnerType::BoxDrawing => "box drawing",
+        SmallSpinnerType::BrailleDouble => "braille double",
+        SmallSpinnerType::BrailleEight => "braille eight",
+        SmallSpinnerType::BrailleEightDouble => "braille eight double",
+        SmallSpinnerType::BrailleOne => "braille one",
+        SmallSpinnerType::BrailleSix => "braille six",
+        SmallSpinnerType::BrailleSixDouble => "braille six double",
+        SmallSpinnerType::Canadian => "canadian",
+        SmallSpinnerType::Clock => "clock",
+        SmallSpinnerType::DoubleArrow => "double arrow",
+        SmallSpinnerType::HorizontalBlock => "horizontal block",
+        SmallSpinnerType::MoonPhases => "moon phases",
+        SmallSpinnerType::OghamA => "ogham a",
+        SmallSpinnerType::OghamB => "ogham b",
+        SmallSpinnerType::OghamC => "ogham c",
+        SmallSpinnerType::Parenthesis => "parenthesis",
+        SmallSpinnerType::QuadrantBlock => "quadrant block",
+        SmallSpinnerType::QuadrantBlockCrack => "quadrant block crack",
+        SmallSpinnerType::TriangleCorners => "triangle corners",
+        SmallSpinnerType::VerticalBlock => "vertical block",
+        SmallSpinnerType::WhiteCircle => "white circle",
+        SmallSpinnerType::WhiteSquare => "white square",
+    }
+    .to_string()
 }
 
 /// Handles a crossterm event and returns a flag indicating

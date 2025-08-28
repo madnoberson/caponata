@@ -20,6 +20,7 @@ use ratatui_small_text::{
     AnimationRepeatMode,
     AnimationStyle,
     SmallTextStyleBuilder,
+    SmallTextWidget,
     TickerAnimationStyleBuilder,
     TickerDirection,
     WaveAnimationStyleBuilder,
