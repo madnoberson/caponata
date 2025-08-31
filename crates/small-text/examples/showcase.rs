@@ -1,5 +1,6 @@
 use std::{
     io,
+    rc::Rc,
     time::Duration,
 };
 
@@ -33,17 +34,17 @@ pub fn main() -> io::Result<()> {
 fn run(terminal: &mut DefaultTerminal) -> io::Result<()> {
     let text_style = SmallTextStyleBuilder::default()
         .with_text("Like snowflakes on a winter window ❄️")
-        .for_target(Target::Every(2))
+        .for_target(Target::Custom(select_every(2)))
         .set_background_color(Color::Rgb(46, 52, 64))
         .set_foreground_color(Color::Rgb(143, 188, 187))
         .set_modifier(Modifier::BOLD)
         .then()
-        .for_target(Target::Every(3))
+        .for_target(Target::Custom(select_every(3)))
         .set_background_color(Color::Rgb(59, 66, 82))
         .set_foreground_color(Color::Rgb(180, 142, 173))
         .set_modifier(Modifier::ITALIC)
         .then()
-        .for_target(Target::Every(5))
+        .for_target(Target::Custom(select_every(5)))
         .set_background_color(Color::Rgb(76, 86, 106))
         .set_foreground_color(Color::Rgb(208, 135, 112))
         .then()
@@ -64,6 +65,13 @@ fn run(terminal: &mut DefaultTerminal) -> io::Result<()> {
     }
 
     Ok(())
+}
+
+fn select_every(
+    n: usize,
+) -> Rc<dyn Fn(Box<dyn Iterator<Item = u16>>) -> Box<dyn Iterator<Item = u16>>>
+{
+    Rc::new(move |iterator| Box::new(iterator.step_by(n)))
 }
 
 /// Handles a crossterm event and returns a flag indicating

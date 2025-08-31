@@ -72,7 +72,7 @@ impl Symbol {
 ///     .unwrap();
 /// let text_style = SmallTextStyleBuilder::default()
 ///     .with_text("Text example")
-///     .for_target(Target::Every(2))
+///     .for_target(Target::Single(2))
 ///     .set_background_color(Color::White)
 ///     .set_foreground_color(Color::Red)
 ///     .set_modifier(Modifier::UNDERLINED)
@@ -255,7 +255,7 @@ fn create_symbols(
 
     let mut symbol_styles: Vec<(Target, SymbolStyle)> =
         symbol_styles.into_iter().collect();
-    symbol_styles.sort_by(|a, b| targets_sorter(a.0, b.0));
+    symbol_styles.sort_by(|a, b| targets_sorter(a.0.clone(), b.0.clone()));
 
     let symbol_values: HashMap<u16, char> = text
         .chars()
@@ -268,7 +268,7 @@ fn create_symbols(
 
     for (target, style) in symbol_styles.iter() {
         let resolved_symbol_coords: Vec<u16> =
-            resolve_target(*target, text_char_count).collect();
+            resolve_target(target.clone(), text_char_count).collect();
         let resolved_symbol_values = symbol_values
             .iter()
             .filter(|(x, _)| resolved_symbol_coords.contains(x));
@@ -309,13 +309,10 @@ fn resolve_target(
     target: Target,
     char_count: u16,
 ) -> Box<dyn Iterator<Item = u16>> {
-    let all = 0..char_count;
-
     match target {
         Target::Single(x) => Box::new(std::iter::once(x)),
         Target::Range(start, end) => Box::new(start..end),
-        Target::Every(n) => Box::new(all.step_by(n as usize)),
-        Target::AllExceptEvery(n) => Box::new(all.filter(move |x| x % n != 0)),
+        Target::Custom(func) => func(Box::new(0..char_count)),
         Target::Untouched => unreachable!(),
     }
 }

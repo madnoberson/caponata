@@ -90,7 +90,7 @@ impl AnimationStep {
 ///     .update_background_color(Color::Red)
 ///     .add_modifier(Modifier::UNDERLINED)
 ///     .then()
-///     .for_target(AnimationTarget::Every(2))
+///     .for_target(AnimationTarget::Range(1, 5))
 ///     .update_foreground_color(Color::White)
 ///     .update_background_color(Color::Green)
 ///     .add_modifier(Modifier::BOLD)

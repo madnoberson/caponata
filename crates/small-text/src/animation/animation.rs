@@ -33,7 +33,7 @@ impl Into<StepSymbolState> for SymbolState {
 /// Represents the state of a symbol for the current
 /// step.
 #[derive(Clone, Copy)]
-enum StepSymbolState {
+pub enum StepSymbolState {
     /// The symbol was styled in the current step.
     Styled(Symbol),
 
@@ -88,7 +88,7 @@ pub struct AnimationFrame {
 ///
 /// let first_step = AnimationStepBuilder::default()
 ///     .with_duration(Duration::from_millis(100))
-///     .for_target(AnimationTarget::Every(2))
+///     .for_target(AnimationTarget::Range(0, 2))
 ///     .update_foreground_color(Color::White)
 ///     .update_background_color(Color::Green)
 ///     .add_modifier(Modifier::BOLD)
@@ -101,7 +101,7 @@ pub struct AnimationFrame {
 ///     .build();
 /// let second_step = AnimationStepBuilder::default()
 ///     .with_duration(Duration::from_millis(100))
-///     .for_target(AnimationTarget::Every(2))
+///     .for_target(AnimationTarget::Range(0, 2))
 ///     .update_foreground_color(Color::Gray)
 ///     .update_background_color(Color::Blue)
 ///     .add_modifier(Modifier::BOLD)
@@ -238,10 +238,12 @@ impl Animation {
 
         let mut actions: Vec<(AnimationTarget, Vec<AnimationAction>)> =
             step.actions.into_iter().collect();
-        actions.sort_by(|a, b| animation_targets_sorter(a.0, b.0));
+        actions.sort_by(|a, b| {
+            animation_targets_sorter(a.0.clone(), b.0.clone())
+        });
 
         for (target, actions) in actions {
-            let x_coords = self.calculate_x_coords(target, &step_states);
+            let x_coords = self.resolve_target(target, &step_states);
             self.execute_actions(x_coords, &mut step_states, actions);
         }
 
@@ -264,36 +266,23 @@ impl Animation {
         AnimationFrame { symbols }
     }
 
-    fn calculate_x_coords(
+    fn resolve_target(
         &self,
         target: AnimationTarget,
         step_states: &HashMap<u16, StepSymbolState>,
     ) -> Vec<u16> {
-        let mut step_states: Vec<(u16, StepSymbolState)> = step_states
+        let mut step_states_as_vec: Vec<(u16, StepSymbolState)> = step_states
             .clone()
             .iter()
             .map(|(x, state)| (*x, *state))
             .collect();
-        step_states.sort_by(|a, b| a.0.cmp(&b.0));
+        step_states_as_vec.sort_by(|a, b| a.0.cmp(&b.0));
 
         match target {
             AnimationTarget::Single(x) => vec![x],
             AnimationTarget::Range(start, end) => (start..=end).collect(),
-            AnimationTarget::Every(n) => step_states
-                .iter()
-                .map(|(x, _)| *x)
-                .step_by(n as usize)
-                .collect(),
-            AnimationTarget::AllExceptEvery(n) => {
-                step_states
-                    .iter()
-                    .enumerate()
-                    .filter_map(|(i, (x, _))| {
-                        if i as u16 % n != 0 { (*x).into() } else { None }
-                    })
-                    .collect()
-            }
-            AnimationTarget::Untouched => step_states
+            AnimationTarget::Custom(func) => func(step_states),
+            AnimationTarget::Untouched => step_states_as_vec
                 .iter()
                 .filter(|(_, step)| {
                     matches!(step, StepSymbolState::Initial(_))
@@ -301,7 +290,7 @@ impl Animation {
                 .map(|(x, _)| x)
                 .copied()
                 .collect(),
-            AnimationTarget::UntouchedThisStep => step_states
+            AnimationTarget::UntouchedThisStep => step_states_as_vec
                 .iter()
                 .filter(|(_, step)| {
                     matches!(
