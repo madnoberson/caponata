@@ -11,7 +11,7 @@ use super::{
     AnimationStep,
     AnimationStyle,
     AnimationTarget,
-    animation_targets_sorter,
+    animation_target_sorter,
 };
 use crate::Symbol;
 
@@ -238,9 +238,7 @@ impl Animation {
 
         let mut actions: Vec<(AnimationTarget, Vec<AnimationAction>)> =
             step.actions.into_iter().collect();
-        actions.sort_by(|a, b| {
-            animation_targets_sorter(a.0.clone(), b.0.clone())
-        });
+        actions.sort_by(|a, b| animation_target_sorter(a.0, b.0));
 
         for (target, actions) in actions {
             let x_coords = self.resolve_target(target, &step_states);

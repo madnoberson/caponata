@@ -29,7 +29,7 @@ use super::{
     SmallTextStyle,
     SymbolStyle,
     Target,
-    targets_sorter,
+    target_sorter,
 };
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
@@ -256,7 +256,7 @@ fn create_symbols(
 
     let mut symbol_styles: Vec<(Target, SymbolStyle)> =
         symbol_styles.into_iter().collect();
-    symbol_styles.sort_by(|a, b| targets_sorter(a.0.clone(), b.0.clone()));
+    symbol_styles.sort_by(|a, b| target_sorter(a.0, b.0));
 
     let symbol_values: HashMap<u16, char> = text
         .chars()

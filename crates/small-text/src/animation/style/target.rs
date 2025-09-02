@@ -48,7 +48,7 @@ pub enum AnimationTarget {
     UntouchedThisStep,
 }
 
-pub(crate) fn animation_targets_sorter(
+pub(crate) fn animation_target_sorter(
     a: AnimationTarget,
     b: AnimationTarget,
 ) -> Ordering {
