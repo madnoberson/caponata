@@ -72,7 +72,7 @@ impl Symbol {
 ///     .unwrap();
 /// let text_style = SmallTextStyleBuilder::default()
 ///     .with_text("Text example")
-///     .for_target(Target::Single(2))
+///     .for_target(Target::Every(2))
 ///     .set_background_color(Color::White)
 ///     .set_foreground_color(Color::Red)
 ///     .set_modifier(Modifier::UNDERLINED)
@@ -251,7 +251,8 @@ fn create_symbols(
     let text_char_count = text.chars().count() as u16;
 
     let mut symbol_styles = symbol_styles.clone();
-    let untouched_symbols_style = symbol_styles.remove(&Target::Untouched);
+    let untouched_symbol_style =
+        symbol_styles.remove(&Target::Untouched).unwrap_or_default();
 
     let mut symbol_styles: Vec<(Target, SymbolStyle)> =
         symbol_styles.into_iter().collect();
@@ -268,7 +269,7 @@ fn create_symbols(
 
     for (target, style) in symbol_styles.iter() {
         let resolved_symbol_coords: Vec<u16> =
-            resolve_target(target.clone(), text_char_count).collect();
+            resolve_target(*target, text_char_count).collect();
         let resolved_symbol_values = symbol_values
             .iter()
             .filter(|(x, _)| resolved_symbol_coords.contains(x));
@@ -287,17 +288,9 @@ fn create_symbols(
         .iter()
         .filter(|(x, _)| untouched_symbol_coords.contains(x));
 
-    if let Some(style) = untouched_symbols_style {
-        for (x, value) in untouched_symbol_values {
-            let symbol = Symbol::new(*value, style);
-            resolved_symbols.insert(*x, symbol);
-        }
-    } else {
-        for (x, value) in untouched_symbol_values {
-            let symbol_style = SymbolStyle::default();
-            let symbol = Symbol::new(*value, symbol_style);
-            resolved_symbols.insert(*x, symbol);
-        }
+    for (x, value) in untouched_symbol_values {
+        let symbol = Symbol::new(*value, untouched_symbol_style);
+        resolved_symbols.insert(*x, symbol);
     }
 
     resolved_symbols
@@ -309,10 +302,13 @@ fn resolve_target(
     target: Target,
     char_count: u16,
 ) -> Box<dyn Iterator<Item = u16>> {
+    let all = 0..char_count;
+
     match target {
         Target::Single(x) => Box::new(std::iter::once(x)),
         Target::Range(start, end) => Box::new(start..end),
-        Target::Custom(func) => func(Box::new(0..char_count)),
-        Target::Untouched => unreachable!(),
+        Target::Every(n) => Box::new(all.step_by(n as usize)),
+        Target::AllExceptEvery(n) => Box::new(all.filter(move |x| x % n != 0)),
+        Target::Untouched => Box::new(std::iter::empty()),
     }
 }

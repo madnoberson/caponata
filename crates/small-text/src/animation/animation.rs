@@ -281,7 +281,20 @@ impl Animation {
         match target {
             AnimationTarget::Single(x) => vec![x],
             AnimationTarget::Range(start, end) => (start..=end).collect(),
-            AnimationTarget::Custom(func) => func(step_states),
+            AnimationTarget::Every(n) => step_states
+                .iter()
+                .map(|(x, _)| *x)
+                .step_by(n as usize)
+                .collect(),
+            AnimationTarget::AllExceptEvery(n) => {
+                step_states
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(i, (x, _))| {
+                        if i as u16 % n != 0 { (*x).into() } else { None }
+                    })
+                    .collect()
+            }
             AnimationTarget::Untouched => step_states_as_vec
                 .iter()
                 .filter(|(_, step)| {
