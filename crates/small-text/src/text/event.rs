@@ -1,7 +1,7 @@
 use super::Symbol;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SmallTextEvent {
+pub enum InteractionEvent {
     Hovered(Symbol),
     HoveredSymbolChanged(Symbol),
     Unhovered,

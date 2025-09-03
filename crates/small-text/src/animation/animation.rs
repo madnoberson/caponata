@@ -8,6 +8,7 @@ use ratatui::style::Modifier;
 use super::{
     AdvancableAnimation,
     AnimationAction,
+    AnimationEvent,
     AnimationStep,
     AnimationStyle,
     AnimationTarget,
@@ -129,8 +130,11 @@ pub struct AnimationFrame {
 /// // Returns next frame of the animation.
 /// let first_frame = animation.next_frame().unwrap();
 ///
+/// // Returns a new event (`AnimationEvent::FrameGenerated`)
+/// animation.take_last_event();
+///
 /// // Pause the animation.
-/// animation.pause()
+/// animation.pause();
 ///
 /// // Returns the same frame as before because animation
 /// // is paused.
@@ -154,6 +158,7 @@ pub struct Animation {
     symbol_states: HashMap<u16, SymbolState>,
     is_paused: bool,
     last_step_retrieved_at: Option<Instant>,
+    last_event: Option<AnimationEvent>,
 }
 
 impl Animation {
@@ -173,7 +178,12 @@ impl Animation {
             symbol_states,
             is_paused: false,
             last_step_retrieved_at: None,
+            last_event: None,
         }
+    }
+
+    pub fn take_last_event(&mut self) -> Option<AnimationEvent> {
+        self.last_event.take()
     }
 
     pub fn next_frame(&mut self) -> Option<AnimationFrame> {
@@ -185,13 +195,15 @@ impl Animation {
             self.last_step_retrieved_at = Some(now);
             self.advancable_animation.current_step()
         } else {
+            self.last_event = Some(AnimationEvent::FrameGenerated);
             self.next_step(now)
         };
 
         if let Some(step) = step {
             self.process_step(step);
-            self.build_frame().into()
+            self.make_frame().into()
         } else {
+            self.last_event = Some(AnimationEvent::Ended);
             None
         }
     }
@@ -251,7 +263,7 @@ impl Animation {
             .collect();
     }
 
-    fn build_frame(&self) -> AnimationFrame {
+    fn make_frame(&self) -> AnimationFrame {
         let symbols: HashMap<u16, Symbol> = self
             .symbol_states
             .iter()

@@ -4,15 +4,22 @@ use std::{
     hash::Hash,
 };
 
+#[cfg(feature = "crossterm")]
+use crossterm::event::Event;
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
     widgets::Widget,
 };
 
-use crate::{
+use super::{
     Animation,
+    AnimationEvent,
     AnimationStyle,
+};
+#[cfg(feature = "crossterm")]
+use crate::InteractionEvent;
+use crate::{
     SmallTextStyle,
     SmallTextWidget,
 };
@@ -150,6 +157,23 @@ where
             animation_styles,
             active_animation: None,
         }
+    }
+
+    pub fn take_animation_event(&mut self) -> Option<AnimationEvent> {
+        if let Some(animation) = &mut self.active_animation {
+            animation.take_last_event()
+        } else {
+            None
+        }
+    }
+
+    #[cfg(feature = "crossterm")]
+    pub fn handle_crossterm_event(
+        &mut self,
+        event: Event,
+        area: Rect,
+    ) -> Option<InteractionEvent> {
+        self.text.handle_event(event, area)
     }
 
     /// Enables the animation associated with the specified key

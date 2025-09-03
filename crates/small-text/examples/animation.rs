@@ -70,7 +70,7 @@ impl Widget for &mut AppWidget {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let base_layout = Layout::default()
             .direction(Direction::Horizontal)
-            .constraints([Constraint::Max(100), Constraint::Fill(1)])
+            .constraints([Constraint::Max(80), Constraint::Fill(1)])
             .split(area)[0];
         let row_layout_constraints: Vec<[Constraint; 4]> =
             (0..self.text_count.div_ceil(4))
@@ -107,6 +107,7 @@ impl Widget for &mut AppWidget {
                 Line::from(animation_name.as_ref())
                     .alignment(Alignment::Left)
                     .fg(Color::White)
+                    .bg(Color::Rgb(30, 30, 30))
                     .add_modifier(Modifier::BOLD)
                     .render(line_area, buf);
 
@@ -145,8 +146,8 @@ fn make_texts(text: &str) -> Vec<(String, AnimatedSmallTextWidget<u16>)> {
     let wave_animated_text = make_wave_animated_text(text);
 
     Vec::from([
-        ("ticker".to_string(), ticker_animated_text),
-        ("wave".to_string(), wave_animated_text),
+        ("Ticker".to_string(), ticker_animated_text),
+        ("Wave".to_string(), wave_animated_text),
     ])
 }
 

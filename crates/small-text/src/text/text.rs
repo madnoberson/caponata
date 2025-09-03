@@ -24,7 +24,7 @@ use ratatui::{
 };
 
 #[cfg(feature = "crossterm")]
-use super::SmallTextEvent;
+use super::InteractionEvent;
 use super::{
     SmallTextStyle,
     SymbolStyle,
@@ -160,7 +160,7 @@ impl SmallTextWidget {
         &mut self,
         event: Event,
         area: Rect,
-    ) -> Option<SmallTextEvent> {
+    ) -> Option<InteractionEvent> {
         let available_width =
             self.symbols.iter().count().min(area.width as usize) as u16;
 
@@ -197,18 +197,18 @@ impl SmallTextWidget {
     fn on_mouse_moved(
         &mut self,
         symbol: Option<Symbol>,
-    ) -> Option<SmallTextEvent> {
+    ) -> Option<InteractionEvent> {
         if let Some(hovered_symbol) = symbol {
             if !self.is_hovered {
                 self.is_hovered = true;
-                SmallTextEvent::Hovered(hovered_symbol).into()
+                InteractionEvent::Hovered(hovered_symbol).into()
             } else {
-                SmallTextEvent::HoveredSymbolChanged(hovered_symbol).into()
+                InteractionEvent::HoveredSymbolChanged(hovered_symbol).into()
             }
         } else {
             if self.is_hovered {
                 self.is_hovered = false;
-                SmallTextEvent::Unhovered.into()
+                InteractionEvent::Unhovered.into()
             } else {
                 None
             }
@@ -219,12 +219,12 @@ impl SmallTextWidget {
         &mut self,
         symbol: Option<Symbol>,
         pressed_button: MouseButton,
-    ) -> Option<SmallTextEvent> {
+    ) -> Option<InteractionEvent> {
         if let Some(pressed_symbol) = symbol
             && !self.pressed_buttons.contains(&pressed_button)
         {
             self.pressed_buttons.insert(pressed_button);
-            return SmallTextEvent::Pressed(pressed_symbol).into();
+            return InteractionEvent::Pressed(pressed_symbol).into();
         }
         None
     }
@@ -233,12 +233,12 @@ impl SmallTextWidget {
         &mut self,
         symbol: Option<Symbol>,
         released_button: MouseButton,
-    ) -> Option<SmallTextEvent> {
+    ) -> Option<InteractionEvent> {
         if let Some(released_symbol) = symbol
             && self.pressed_buttons.contains(&released_button)
         {
             self.pressed_buttons.remove(&released_button);
-            return SmallTextEvent::Released(released_symbol).into();
+            return InteractionEvent::Released(released_symbol).into();
         }
         None
     }
