@@ -6,10 +6,12 @@ use std::cmp::Ordering;
 /// # Applying order:
 ///
 /// 1. [`Target::Every`]
-/// 2. [`Target::AllExceptEvery`]
-/// 3. [`Target::Range`]
-/// 4. [`Target::Single`]
-/// 5. [`Target::Untouched`]
+/// 2. [`Target::EveryFrom`]
+/// 3. [`Target::ExceptEvery`]
+/// 4. [`Target::ExceptEveryFrom`]
+/// 5. [`Target::Range`]
+/// 6. [`Target::Single`]
+/// 7. [`Target::Untouched`]
 ///
 /// Default variant is [`Target::Untouched`].
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
@@ -31,10 +33,22 @@ pub enum Target {
     /// selected positions.
     Every(u16),
 
+    /// Every n-th symbol position, starting from
+    /// starting position. The first value represents
+    /// the interval between selected positions, the
+    /// second represents the starting position.
+    EveryFrom(u16, u16),
+
     /// All symbol positions except every n-th one,
     /// starting from 0. The value represents the
     /// interval to skip.
-    AllExceptEvery(u16),
+    ExceptEvery(u16),
+
+    /// All symbol positions except every n-th one,
+    /// starting from starting positions. The first
+    /// value represents the interval to skip, the
+    /// second represents the starting position.
+    ExceptEveryFrom(u16, u16),
 
     /// Positions of symbols that were not affected
     /// by styling.
@@ -44,8 +58,10 @@ pub enum Target {
 
 pub(crate) fn target_sorter(a: Target, b: Target) -> Ordering {
     let priority = |item: &Target| match item {
-        Target::Every(_) => 4,
-        Target::AllExceptEvery(_) => 3,
+        Target::Every(_) => 6,
+        Target::EveryFrom(_, _) => 5,
+        Target::ExceptEvery(_) => 4,
+        Target::ExceptEveryFrom(_, _) => 3,
         Target::Range(_, _) => 2,
         Target::Single(_) => 1,
         Target::Untouched => 0,

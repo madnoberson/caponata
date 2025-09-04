@@ -6,8 +6,8 @@ use std::cmp::Ordering;
 ///
 /// # Applying order:
 ///
-/// 1. [`AnimationTarget::Every`]
-/// 2. [`AnimationTarget::AllExceptEvery`]
+/// 1. [`AnimationTarget::EveryFrom`]
+/// 2. [`AnimationTarget::ExceptEveryFrom`]
 /// 3. [`AnimationTarget::Range`]
 /// 4. [`AnimationTarget::Single`]
 /// 5. [`AnimationTarget::Untouched`]
@@ -33,10 +33,22 @@ pub enum AnimationTarget {
     /// selected positions.
     Every(u16),
 
+    /// Every n-th symbol position, starting from
+    /// starting position. The first value represents
+    /// the interval between selected positions, the
+    /// second represents the starting position.
+    EveryFrom(u16, u16),
+
     /// All symbol positions except every n-th one,
     /// starting from 0. The value represents the
     /// interval to skip.
-    AllExceptEvery(u16),
+    ExceptEvery(u16),
+
+    /// All symbol positions except every n-th one,
+    /// starting from starting positions. The first
+    /// value represents the interval to skip, the
+    /// second represents the starting position.
+    ExceptEveryFrom(u16, u16),
 
     /// Positions of symbols that were not affected
     /// by styling at any step.
@@ -53,10 +65,12 @@ pub(crate) fn animation_target_sorter(
     b: AnimationTarget,
 ) -> Ordering {
     let priority = |item: &AnimationTarget| match item {
-        AnimationTarget::Every(_) => 5,
-        AnimationTarget::AllExceptEvery(_) => 4,
-        AnimationTarget::Single(_) => 3,
-        AnimationTarget::Range(_, _) => 2,
+        AnimationTarget::Every(_) => 7,
+        AnimationTarget::EveryFrom(_, _) => 6,
+        AnimationTarget::ExceptEvery(_) => 5,
+        AnimationTarget::ExceptEveryFrom(_, _) => 4,
+        AnimationTarget::Range(_, _) => 3,
+        AnimationTarget::Single(_) => 2,
         AnimationTarget::Untouched => 1,
         AnimationTarget::UntouchedThisStep => 0,
     };

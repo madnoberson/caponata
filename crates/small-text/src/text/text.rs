@@ -308,7 +308,14 @@ fn resolve_target(
         Target::Single(x) => Box::new(std::iter::once(x)),
         Target::Range(start, end) => Box::new(start..end),
         Target::Every(n) => Box::new(all.step_by(n as usize)),
-        Target::AllExceptEvery(n) => Box::new(all.filter(move |x| x % n != 0)),
+        Target::EveryFrom(n, offset) => {
+            Box::new(all.skip(offset as usize).step_by(n as usize))
+        }
+        Target::ExceptEvery(n) => Box::new(all.filter(move |x| x % n != 0)),
+        Target::ExceptEveryFrom(n, offset) => Box::new(
+            all.skip(offset as usize)
+                .filter(move |x| x + offset % n != 0),
+        ),
         Target::Untouched => Box::new(std::iter::empty()),
     }
 }

@@ -296,32 +296,34 @@ impl Animation {
                 .map(|(x, _)| *x)
                 .step_by(n as usize)
                 .collect(),
-            AnimationTarget::AllExceptEvery(n) => {
-                step_states
-                    .iter()
-                    .enumerate()
-                    .filter_map(|(i, (x, _))| {
-                        if i as u16 % n != 0 { (*x).into() } else { None }
-                    })
-                    .collect()
-            }
+            AnimationTarget::EveryFrom(n, offset) => step_states
+                .iter()
+                .map(|(x, _)| *x)
+                .skip(offset as usize)
+                .step_by(n as usize)
+                .collect(),
+            AnimationTarget::ExceptEvery(n) => step_states
+                .iter()
+                .enumerate()
+                .filter(|(i, _)| *i as u16 % n != 0)
+                .map(|(_, (x, _))| (*x).into())
+                .collect(),
+            AnimationTarget::ExceptEveryFrom(n, offset) => step_states
+                .iter()
+                .enumerate()
+                .skip(offset as usize)
+                .filter(|(i, _)| *i as u16 % n + offset != 0)
+                .map(|(_, (x, _))| (*x).into())
+                .collect(),
             AnimationTarget::Untouched => step_states_as_vec
                 .iter()
-                .filter(|(_, step)| {
-                    matches!(step, StepSymbolState::Initial(_))
-                })
+                .filter(|(_, state)| is_symbol_untouched(*state))
                 .map(|(x, _)| x)
                 .copied()
                 .collect(),
             AnimationTarget::UntouchedThisStep => step_states_as_vec
                 .iter()
-                .filter(|(_, step)| {
-                    matches!(
-                        step,
-                        StepSymbolState::Untouched(_)
-                            | StepSymbolState::Initial(_)
-                    )
-                })
+                .filter(|(_, state)| is_symbol_untouched_this_step(*state))
                 .map(|(x, _)| x)
                 .copied()
                 .collect(),
@@ -373,4 +375,15 @@ impl Animation {
             }
         }
     }
+}
+
+fn is_symbol_untouched(state: StepSymbolState) -> bool {
+    matches!(state, StepSymbolState::Untouched(_))
+}
+
+fn is_symbol_untouched_this_step(state: StepSymbolState) -> bool {
+    matches!(
+        state,
+        StepSymbolState::Initial(_) | StepSymbolState::Untouched(_)
+    )
 }
