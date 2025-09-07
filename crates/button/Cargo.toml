@@ -1,5 +1,5 @@
 [package]
-name = "ratatui_button"
+name = "caponata_button"
 version = "0.1.0"
 
 license.workspace = true
@@ -13,4 +13,4 @@ rust-version.workspace = true
 crossterm = "0.28.*"
 ratatui = "0.29.*"
 derive_builder = "0.20.*"
-ratatui_small_spinner = { version = "0.1.0", path = "../small-spinner" }
+caponata_small_spinner = { version = "0.1.0", path = "../small-spinner" }

@@ -4,6 +4,15 @@ use std::{
     time::Duration,
 };
 
+use caponata_small_text::{
+    AnimatedSmallTextWidget,
+    AnimationAdvanceMode,
+    AnimationRepeatMode,
+    SmallTextStyleBuilder,
+    TickerAnimationStyleBuilder,
+    TickerDirection,
+    WaveAnimationStyleBuilder,
+};
 use crossterm::event::{
     Event,
     KeyCode,
@@ -27,15 +36,6 @@ use ratatui::{
     },
     text::Line,
     widgets::Widget,
-};
-use ratatui_small_text::{
-    AnimatedSmallTextWidget,
-    AnimationAdvanceMode,
-    AnimationRepeatMode,
-    SmallTextStyleBuilder,
-    TickerAnimationStyleBuilder,
-    TickerDirection,
-    WaveAnimationStyleBuilder,
 };
 
 pub fn main() -> io::Result<()> {

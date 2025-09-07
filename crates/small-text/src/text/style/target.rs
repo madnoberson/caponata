@@ -1,6 +1,6 @@
 use std::cmp::Ordering;
 
-use ratatui_common::Callback;
+use caponata_common::Callback;
 
 type TargetCustomCallback =
     Callback<(Box<dyn Iterator<Item = u16>>,), Box<dyn Iterator<Item = u16>>>;

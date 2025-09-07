@@ -27,7 +27,7 @@ use ratatui::{
     },
 };
 
-use ratatui_button::{
+use caponata_button::{
     ButtonEvent,
     ButtonStateStyleBuilder,
     ButtonStatus,
@@ -35,7 +35,7 @@ use ratatui_button::{
     ButtonThickness,
     ButtonWidget,
 };
-use ratatui_small_spinner::SmallSpinnerStyleBuilder;
+use caponata_small_spinner::SmallSpinnerStyleBuilder;
 
 fn main() -> Result<(), io::Error> {
     execute!(io::stdout(), EnableMouseCapture).unwrap();

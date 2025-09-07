@@ -5,12 +5,12 @@ default-members = ["crates/*"]
 
 [workspace.package]
 license = "Apache-2.0"
-repository = "https://github.com/madnoberson/ratatui-recipes"
+repository = "https://github.com/madnoberson/caponata"
 edition = "2024"
 rust-version = "1.85.0"
 
 [package]
-name = "ratatui-recipes"
+name = "caponata"
 version = "0.1.0"
 
 license.workspace = true
@@ -21,13 +21,13 @@ rust-version.workspace = true
 [lib]
 
 [features]
-default = ["all-widgets"]
+all = ["all-widgets"]
 all-widgets = ["small-spinner-widget", "small-text-widget", "button-widget"]
-small-spinner-widget = ["ratatui_small_spinner"]
-small-text-widget = ["ratatui_small_text"]
-button-widget = ["ratatui_button"]
+small-spinner-widget = ["caponata_small_spinner"]
+small-text-widget = ["caponata_small_text"]
+button-widget = ["caponata_button"]
 
 [dependencies]
-ratatui_small_spinner = { version = "0.1.0", path = "crates/small-spinner", optional = true }
-ratatui_small_text = { version = "0.1.0", path = "crates/small-text", optional = true }
-ratatui_button = { version = "0.1.0", path = "crates/button", optional = true }
+caponata_small_spinner = { version = "0.1.0", path = "crates/small-spinner", optional = true }
+caponata_small_text = { version = "0.1.0", path = "crates/small-text", optional = true }
+caponata_button = { version = "0.1.0", path = "crates/button", optional = true }

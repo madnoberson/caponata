@@ -3,6 +3,11 @@ use std::{
     time::Duration,
 };
 
+use caponata_small_text::{
+    SmallTextStyleBuilder,
+    SmallTextWidget,
+    Target,
+};
 use crossterm::event::{
     Event,
     KeyCode,
@@ -15,11 +20,6 @@ use ratatui::{
         Color,
         Modifier,
     },
-};
-use ratatui_small_text::{
-    SmallTextStyleBuilder,
-    SmallTextWidget,
-    Target,
 };
 
 pub fn main() -> io::Result<()> {

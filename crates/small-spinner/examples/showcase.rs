@@ -3,6 +3,11 @@ use std::{
     time::Duration,
 };
 
+use caponata_small_spinner::{
+    SmallSpinnerStyleBuilder,
+    SmallSpinnerType,
+    SmallSpinnerWidget,
+};
 use crossterm::event::{
     Event,
     KeyCode,
@@ -26,11 +31,6 @@ use ratatui::{
     },
     text::Line,
     widgets::Widget,
-};
-use ratatui_small_spinner::{
-    SmallSpinnerStyleBuilder,
-    SmallSpinnerType,
-    SmallSpinnerWidget,
 };
 
 pub fn main() -> io::Result<()> {
