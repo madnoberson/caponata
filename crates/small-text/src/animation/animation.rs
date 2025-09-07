@@ -74,7 +74,10 @@ pub struct AnimationFrame {
 /// # Example
 ///
 /// ```rust
-/// use std::time::Duration;
+/// use std::{
+///     time::Duration,
+///     collections::HashMap,
+/// };
 ///
 /// use ratatui::style::{Color, Modifier};
 /// use ratatui_small_text::{
@@ -195,8 +198,10 @@ impl Animation {
             self.last_step_retrieved_at = Some(now);
             self.advancable_animation.current_step()
         } else {
+            let last_step_retrieved_at = self.last_step_retrieved_at?;
+            self.last_step_retrieved_at = Some(now);
             self.last_event = Some(AnimationEvent::FrameGenerated);
-            self.next_step(now)
+            self.next_step(now, last_step_retrieved_at)
         };
 
         if let Some(step) = step {
@@ -220,8 +225,11 @@ impl Animation {
         self.advancable_animation.advance();
     }
 
-    fn next_step(&mut self, now: Instant) -> Option<AnimationStep> {
-        let last_step_retrieved_at = self.last_step_retrieved_at?;
+    fn next_step(
+        &mut self,
+        now: Instant,
+        last_step_retrieved_at: Instant,
+    ) -> Option<AnimationStep> {
         let current_step = self.advancable_animation.current_step()?;
 
         let enough_time_passed = now.duration_since(last_step_retrieved_at)
@@ -233,7 +241,6 @@ impl Animation {
         };
 
         if next_step.is_some() {
-            self.last_step_retrieved_at = Some(now);
             next_step
         } else {
             current_step.into()

@@ -256,7 +256,7 @@ fn create_symbols(
 
     let mut symbol_styles: Vec<(Target, SymbolStyle)> =
         symbol_styles.into_iter().collect();
-    symbol_styles.sort_by(|a, b| target_sorter(a.0, b.0));
+    symbol_styles.sort_by(|a, b| target_sorter(a.0.clone(), b.0.clone()));
 
     let symbol_values: HashMap<u16, char> = text
         .chars()
@@ -269,7 +269,7 @@ fn create_symbols(
 
     for (target, style) in symbol_styles.iter() {
         let resolved_symbol_coords: Vec<u16> =
-            resolve_target(*target, text_char_count).collect();
+            resolve_target(target.clone(), text_char_count).collect();
         let resolved_symbol_values = symbol_values
             .iter()
             .filter(|(x, _)| resolved_symbol_coords.contains(x));
@@ -316,6 +316,7 @@ fn resolve_target(
             all.skip(offset as usize)
                 .filter(move |x| x + offset % n != 0),
         ),
+        Target::Custom(callback) => callback.call((Box::new(all),)),
         Target::Untouched => Box::new(std::iter::empty()),
     }
 }

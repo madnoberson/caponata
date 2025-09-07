@@ -1,20 +1,26 @@
 use std::cmp::Ordering;
 
+use ratatui_common::Callback;
+
+type TargetCustomCallback =
+    Callback<(Box<dyn Iterator<Item = u16>>,), Box<dyn Iterator<Item = u16>>>;
+
 /// Represents the selection of symbol positions to which
 /// styles should be applied to [`SmallTextWidget`].
 ///
 /// # Applying order:
 ///
-/// 1. [`Target::Every`]
-/// 2. [`Target::EveryFrom`]
-/// 3. [`Target::ExceptEvery`]
-/// 4. [`Target::ExceptEveryFrom`]
-/// 5. [`Target::Range`]
-/// 6. [`Target::Single`]
-/// 7. [`Target::Untouched`]
+/// 1. [`Target::Custom`]
+/// 2. [`Target::Every`]
+/// 3. [`Target::EveryFrom`]
+/// 4. [`Target::ExceptEvery`]
+/// 5. [`Target::ExceptEveryFrom`]
+/// 6. [`Target::Range`]
+/// 7. [`Target::Single`]
+/// 8. [`Target::Untouched`]
 ///
 /// Default variant is [`Target::Untouched`].
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 pub enum Target {
     /// A specific position of a single symbol. This
     /// is a virtual x coordinate representing the
@@ -50,6 +56,8 @@ pub enum Target {
     /// second represents the starting position.
     ExceptEveryFrom(u16, u16),
 
+    Custom(TargetCustomCallback),
+
     /// Positions of symbols that were not affected
     /// by styling.
     #[default]
@@ -58,6 +66,7 @@ pub enum Target {
 
 pub(crate) fn target_sorter(a: Target, b: Target) -> Ordering {
     let priority = |item: &Target| match item {
+        Target::Custom(_) => 7,
         Target::Every(_) => 6,
         Target::EveryFrom(_, _) => 5,
         Target::ExceptEvery(_) => 4,

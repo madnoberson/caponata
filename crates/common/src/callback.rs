@@ -1,0 +1,58 @@
+use std::{
+    fmt,
+    hash::{
+        Hash,
+        Hasher,
+    },
+    marker::Tuple,
+    rc::Rc,
+};
+
+use uuid::Uuid;
+
+pub struct Callback<Args: Tuple, R> {
+    id: Uuid,
+    function: Rc<Box<dyn Fn(Args) -> R>>,
+}
+
+impl<Args: Tuple, R> fmt::Debug for Callback<Args, R> {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("Callback")
+    }
+}
+
+impl<Args: Tuple, R> PartialEq for Callback<Args, R> {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+
+impl<Args: Tuple, R> Eq for Callback<Args, R> {}
+
+impl<Args: Tuple, R> Clone for Callback<Args, R> {
+    fn clone(&self) -> Self {
+        Callback {
+            id: self.id,
+            function: self.function.clone(),
+        }
+    }
+}
+
+impl<Args: Tuple, R> Hash for Callback<Args, R> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.id.hash(state);
+    }
+}
+
+impl<Args: Tuple, R> Callback<Args, R> {
+    pub fn new(function: Box<dyn Fn(Args) -> R>) -> Self {
+        Self {
+            id: Uuid::new_v4(),
+            function: Rc::new(function),
+        }
+    }
+
+    pub fn call(&self, args: Args) -> R {
+        self.function.call((args,))
+    }
+}
