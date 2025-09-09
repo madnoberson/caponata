@@ -122,7 +122,11 @@ impl SmallTextWidget {
         virtual_canvas: &HashMap<u16, u16>,
     ) {
         for (x, symbol) in self.symbols.iter() {
-            let real_x = virtual_canvas.get(x).unwrap();
+            let real_x = if let Some(real_x) = virtual_canvas.get(x) {
+                real_x
+            } else {
+                continue;
+            };
 
             let ratatui_style = Style::default()
                 .fg(symbol.foreground_color)
@@ -256,7 +260,7 @@ fn create_symbols(
 
     let mut symbol_styles: Vec<(Target, SymbolStyle)> =
         symbol_styles.into_iter().collect();
-    symbol_styles.sort_by(|a, b| target_sorter(a.0.clone(), b.0.clone()));
+    symbol_styles.sort_by(|a, b| target_sorter(&a.0, &b.0));
 
     let symbol_values: HashMap<u16, char> = text
         .chars()

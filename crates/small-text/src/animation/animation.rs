@@ -257,8 +257,7 @@ impl Animation {
 
         let mut actions: Vec<(AnimationTarget, Vec<AnimationAction>)> =
             step.actions.into_iter().collect();
-        actions
-            .sort_by(|a, b| animation_target_sorter(a.0.clone(), b.0.clone()));
+        actions.sort_by(|a, b| animation_target_sorter(&a.0, &b.0));
 
         for (target, actions) in actions {
             let x_coords = self.resolve_target(target, &step_states);
@@ -348,7 +347,11 @@ impl Animation {
         actions: Vec<AnimationAction>,
     ) {
         for x in x_coords {
-            let step_state = step_states.get_mut(&x).unwrap();
+            let step_state = if let Some(state) = step_states.get_mut(&x) {
+                state
+            } else {
+                continue;
+            };
 
             let mut symbol = match step_state {
                 StepSymbolState::Styled(symbol) => symbol,

@@ -81,8 +81,8 @@ pub enum AnimationTarget {
 }
 
 pub(crate) fn animation_target_sorter(
-    a: AnimationTarget,
-    b: AnimationTarget,
+    a: &AnimationTarget,
+    b: &AnimationTarget,
 ) -> Ordering {
     let priority = |item: &AnimationTarget| match item {
         AnimationTarget::Custom(_) => 8,

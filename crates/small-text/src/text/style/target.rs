@@ -68,7 +68,7 @@ pub enum Target {
     Untouched,
 }
 
-pub(crate) fn target_sorter(a: Target, b: Target) -> Ordering {
+pub(crate) fn target_sorter(a: &Target, b: &Target) -> Ordering {
     let priority = |item: &Target| match item {
         Target::Custom(_) => 7,
         Target::Every(_) => 6,
