@@ -65,7 +65,7 @@ pub struct AnimationStyle {
     pub(crate) steps: Vec<AnimationStep>,
 }
 
-impl AnimationStyle {
+impl<'a> AnimationStyle {
     pub fn new(
         repeat_mode: AnimationRepeatMode,
         advance_mode: AnimationAdvanceMode,

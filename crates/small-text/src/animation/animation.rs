@@ -257,7 +257,8 @@ impl Animation {
 
         let mut actions: Vec<(AnimationTarget, Vec<AnimationAction>)> =
             step.actions.into_iter().collect();
-        actions.sort_by(|a, b| animation_target_sorter(a.0, b.0));
+        actions
+            .sort_by(|a, b| animation_target_sorter(a.0.clone(), b.0.clone()));
 
         for (target, actions) in actions {
             let x_coords = self.resolve_target(target, &step_states);
@@ -298,6 +299,9 @@ impl Animation {
         match target {
             AnimationTarget::Single(x) => vec![x],
             AnimationTarget::Range(start, end) => (start..=end).collect(),
+            AnimationTarget::Custom(callable) => {
+                callable.call((step_states.clone(),)).collect()
+            }
             AnimationTarget::Every(n) => step_states
                 .iter()
                 .map(|(x, _)| *x)

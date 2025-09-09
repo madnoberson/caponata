@@ -60,7 +60,7 @@ pub struct AnimationStep {
     pub(crate) duration: Duration,
 }
 
-impl AnimationStep {
+impl<'a> AnimationStep {
     pub fn new(
         actions: HashMap<AnimationTarget, Vec<AnimationAction>>,
         duration: Duration,
@@ -109,7 +109,7 @@ pub struct AnimationStepBuilder {
     actions: HashMap<AnimationTarget, Vec<AnimationAction>>,
 }
 
-impl AnimationStepBuilder {
+impl<'a> AnimationStepBuilder {
     pub fn with_duration(mut self, duration: Duration) -> Self {
         self.duration = Some(duration);
         self
@@ -141,7 +141,7 @@ pub struct AnimationActionAccumulator {
     step_builder: AnimationStepBuilder,
 }
 
-impl AnimationActionAccumulator {
+impl<'a> AnimationActionAccumulator {
     pub fn update_character(self, character: char) -> Self {
         let action = AnimationAction::UpdateCharacter(character);
         self.do_action(action)

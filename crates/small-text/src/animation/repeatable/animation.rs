@@ -14,7 +14,7 @@ pub(crate) enum RepeatableAnimation {
     Infinitely(InfinitelyRepeatableAnimation),
 }
 
-impl RepeatableAnimation {
+impl<'a> RepeatableAnimation {
     pub fn new(
         steps: Vec<AnimationStep>,
         repeat_mode: AnimationRepeatMode,
@@ -34,7 +34,7 @@ impl RepeatableAnimation {
 
     /// Returns the current animation step if the iteration
     /// limit is not reached; otherwise returns `None`.
-    pub fn current_step(&self) -> Option<AnimationStep> {
+    pub fn current_step(&'a self) -> Option<AnimationStep> {
         match self {
             Self::Finitely(animation) => animation.current_step(),
             Self::Infinitely(animation) => animation.current_step().into(),
@@ -44,7 +44,7 @@ impl RepeatableAnimation {
     /// Advances the animation and returns the current step
     /// if the iteration limit is not reached; otherwise
     /// returns `None`.
-    pub fn next_step(&mut self) -> Option<AnimationStep> {
+    pub fn next_step(&'a mut self) -> Option<AnimationStep> {
         match self {
             Self::Finitely(animation) => animation.next_step(),
             Self::Infinitely(animation) => animation.next_step().into(),

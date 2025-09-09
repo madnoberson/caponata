@@ -1,9 +1,9 @@
 use std::cmp::Ordering;
 
-use caponata_common::Callback;
+use caponata_common::Callable;
 
-type TargetCustomCallback =
-    Callback<(Box<dyn Iterator<Item = u16>>,), Box<dyn Iterator<Item = u16>>>;
+type TargetCustomCallable =
+    Callable<(Box<dyn Iterator<Item = u16>>,), Box<dyn Iterator<Item = u16>>>;
 
 /// Represents the selection of symbol positions to which
 /// styles should be applied to [`SmallTextWidget`].
@@ -56,7 +56,11 @@ pub enum Target {
     /// second represents the starting position.
     ExceptEveryFrom(u16, u16),
 
-    Custom(TargetCustomCallback),
+    /// Custom selection logic using a function.
+    /// The function receives virtual x coordinates
+    /// of symbols and should return the selected
+    /// virtual x coordinates.
+    Custom(TargetCustomCallable),
 
     /// Positions of symbols that were not affected
     /// by styling.

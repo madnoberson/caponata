@@ -1,6 +1,6 @@
 #![feature(tuple_trait)]
 #![feature(fn_traits)]
 
-mod callback;
+mod callable;
 
-pub use callback::*;
+pub use callable::*;

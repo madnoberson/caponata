@@ -40,7 +40,7 @@ pub struct WaveAnimationStyle {
     repeat_mode: AnimationRepeatMode,
 }
 
-impl Into<AnimationStyle> for WaveAnimationStyle {
+impl<'a> Into<AnimationStyle> for WaveAnimationStyle {
     fn into(self) -> AnimationStyle {
         let mut steps: Vec<AnimationStep> = Vec::new();
 

@@ -1,4 +1,14 @@
-use std::cmp::Ordering;
+use std::{
+    cmp::Ordering,
+    collections::HashMap,
+};
+
+use caponata_common::Callable;
+
+use crate::StepSymbolState;
+
+type AnimationTargetCustomCallable =
+    Callable<(HashMap<u16, StepSymbolState>,), Box<dyn Iterator<Item = u16>>>;
 
 /// Represents the selection of symbol positions to
 /// which styles should be applied during a specific
@@ -6,15 +16,18 @@ use std::cmp::Ordering;
 ///
 /// # Applying order:
 ///
-/// 1. [`AnimationTarget::EveryFrom`]
-/// 2. [`AnimationTarget::ExceptEveryFrom`]
-/// 3. [`AnimationTarget::Range`]
-/// 4. [`AnimationTarget::Single`]
-/// 5. [`AnimationTarget::Untouched`]
-/// 6. [`AnimationTarget::UntouchedThisStep`]
+/// 1. [`AnimationTarget::Custom`]
+/// 2. [`AnimationTarget::Every`]
+/// 3. [`AnimationTarget::EveryFrom`]
+/// 4. [`AnimationTarget::ExceptEvery`]
+/// 5. [`AnimationTarget::ExceptEveryFrom`]
+/// 6. [`AnimationTarget::Range`]
+/// 7. [`AnimationTarget::Single`]
+/// 8. [`AnimationTarget::Untouched`]
+/// 9. [`AnimationTarget::UntouchedThisStep`]
 ///
 /// Default variant is [`AnimationTarget::Untouched`].
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 pub enum AnimationTarget {
     /// A specific position of a single symbol. This
     /// is a virtual x coordinate representing the
@@ -50,6 +63,13 @@ pub enum AnimationTarget {
     /// second represents the starting position.
     ExceptEveryFrom(u16, u16),
 
+    /// Custom selection logic using a function.
+    /// The function receives a hashmap of virtual
+    /// x coordinates with corresponding symbol
+    /// states and should return the selected
+    /// virtual x coordinates.
+    Custom(AnimationTargetCustomCallable),
+
     /// Positions of symbols that were not affected
     /// by styling at any step.
     #[default]
@@ -65,6 +85,7 @@ pub(crate) fn animation_target_sorter(
     b: AnimationTarget,
 ) -> Ordering {
     let priority = |item: &AnimationTarget| match item {
+        AnimationTarget::Custom(_) => 8,
         AnimationTarget::Every(_) => 7,
         AnimationTarget::EveryFrom(_, _) => 6,
         AnimationTarget::ExceptEvery(_) => 5,

@@ -316,7 +316,7 @@ fn resolve_target(
             all.skip(offset as usize)
                 .filter(move |x| x + offset % n != 0),
         ),
-        Target::Custom(callback) => callback.call((Box::new(all),)),
+        Target::Custom(callable) => callable.call((Box::new(all),)),
         Target::Untouched => Box::new(std::iter::empty()),
     }
 }
