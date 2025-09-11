@@ -50,7 +50,8 @@ use super::{
 ///     .with_repeat_mode(AnimationRepeatMode::Infinite)
 ///     .with_advance_mode(AnimationAdvanceMode::Auto)
 ///     .with_steps(vec![first_step, second_step])
-///     .build();
+///     .build()
+///     .unwrap();
 /// ```
 #[derive(Debug, Default, Clone, PartialEq, Eq, Builder)]
 #[builder(setter(prefix = "with", into))]

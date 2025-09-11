@@ -63,7 +63,7 @@ pub struct AnimationStep {
     pub(crate) actions: HashMap<AnimationTarget, Vec<AnimationAction>>,
 
     /// Callback that is called before finishing step
-    /// processing. The function receives hash map of
+    /// processing. The function receives a map of
     /// symbol positions to their corresponding states
     /// and should return map of updated symbol
     /// positions to their corresponding updated symbols.
@@ -136,6 +136,14 @@ impl<'a> AnimationStepBuilder {
         self
     }
 
+    pub fn with_before_finish_callback(
+        mut self,
+        callback: BeforeFinishCallback,
+    ) -> Self {
+        self.on_before_finish = Some(callback);
+        self
+    }
+
     pub fn for_target(
         self,
         target: AnimationTarget,
@@ -143,7 +151,6 @@ impl<'a> AnimationStepBuilder {
         AnimationActionAccumulator {
             target,
             actions: Vec::new(),
-            on_before_finish: None,
             step_builder: self,
         }
     }
@@ -161,7 +168,6 @@ impl<'a> AnimationStepBuilder {
 pub struct AnimationActionAccumulator {
     target: AnimationTarget,
     actions: Vec<AnimationAction>,
-    on_before_finish: Option<BeforeFinishCallback>,
     step_builder: AnimationStepBuilder,
 }
 
@@ -201,17 +207,10 @@ impl<'a> AnimationActionAccumulator {
         self
     }
 
-    pub fn finish_with(mut self, callback: BeforeFinishCallback) -> Self {
-        self.on_before_finish = Some(callback);
-        self
-    }
-
     pub fn then(mut self) -> AnimationStepBuilder {
         self.step_builder
             .actions
             .extend([(self.target, self.actions)]);
-        self.step_builder.on_before_finish = self.on_before_finish;
-
         self.step_builder
     }
 }
