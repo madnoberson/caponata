@@ -57,6 +57,16 @@ impl Into<SymbolState> for StepSymbolState {
     }
 }
 
+impl StepSymbolState {
+    pub fn symbol(&self) -> Symbol {
+        match self {
+            Self::Styled(symbol) => *symbol,
+            Self::Initial(symbol) => *symbol,
+            Self::Untouched(symbol) => *symbol,
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AnimationFrame {
     pub symbols: HashMap<u16, Symbol>,
@@ -264,6 +274,11 @@ impl Animation {
             self.execute_actions(x_coords, &mut step_states, actions);
         }
 
+        if let Some(on_before_finish) = step.on_before_finish {
+            let symbols = on_before_finish.call((step_states.clone(),));
+            merge_symbols_with_step_states(symbols, &mut step_states);
+        }
+
         self.symbol_states = step_states
             .into_iter()
             .map(|(x, state)| (x, state.into()))
@@ -353,16 +368,12 @@ impl Animation {
                 continue;
             };
 
-            let mut symbol = match step_state {
-                StepSymbolState::Styled(symbol) => symbol,
-                StepSymbolState::Untouched(symbol) => symbol,
-                StepSymbolState::Initial(symbol) => symbol,
-            };
+            let mut symbol = step_state.symbol();
             for action in actions.iter() {
                 self.execute_action(&mut symbol, *action);
             }
 
-            let new_step_state = StepSymbolState::Styled(*symbol);
+            let new_step_state = StepSymbolState::Styled(symbol);
             step_states.insert(x, new_step_state);
         }
     }
@@ -400,4 +411,13 @@ fn is_symbol_untouched_this_step(state: StepSymbolState) -> bool {
         state,
         StepSymbolState::Initial(_) | StepSymbolState::Untouched(_)
     )
+}
+
+fn merge_symbols_with_step_states(
+    symbols: HashMap<u16, Symbol>,
+    step_states: &mut HashMap<u16, StepSymbolState>,
+) {
+    for (virtual_x, symbol) in symbols {
+        step_states.insert(virtual_x, StepSymbolState::Styled(symbol));
+    }
 }

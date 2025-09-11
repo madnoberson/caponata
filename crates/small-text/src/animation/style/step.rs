@@ -3,6 +3,7 @@ use std::{
     time::Duration,
 };
 
+use caponata_common::Callable;
 use ratatui::style::{
     Color,
     Modifier,
@@ -12,6 +13,13 @@ use super::{
     AnimationAction,
     AnimationTarget,
 };
+use crate::{
+    StepSymbolState,
+    Symbol,
+};
+
+pub type BeforeFinishCallback =
+    Callable<(HashMap<u16, StepSymbolState>,), HashMap<u16, Symbol>>;
 
 /// A single step in the animation for [`SmallTextWidget`].
 ///
@@ -50,9 +58,16 @@ use super::{
 /// ```
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct AnimationStep {
-    /// A map from the selections of the symbol positions
+    /// A map of the selections of the symbol positions
     /// to the actions that applied to them.
     pub(crate) actions: HashMap<AnimationTarget, Vec<AnimationAction>>,
+
+    /// Callback that is called before finishing step
+    /// processing. The function receives hash map of
+    /// symbol positions to their corresponding states
+    /// and should return map of updated symbol
+    /// positions to their corresponding updated symbols.
+    pub(crate) on_before_finish: Option<BeforeFinishCallback>,
 
     /// The duration of this animation step. Once this
     /// time elapses, the animation advances to the next
@@ -63,9 +78,14 @@ pub struct AnimationStep {
 impl<'a> AnimationStep {
     pub fn new(
         actions: HashMap<AnimationTarget, Vec<AnimationAction>>,
+        on_before_finish: Option<BeforeFinishCallback>,
         duration: Duration,
     ) -> Self {
-        Self { actions, duration }
+        Self {
+            actions,
+            on_before_finish,
+            duration,
+        }
     }
 }
 
@@ -107,6 +127,7 @@ impl<'a> AnimationStep {
 pub struct AnimationStepBuilder {
     duration: Option<Duration>,
     actions: HashMap<AnimationTarget, Vec<AnimationAction>>,
+    on_before_finish: Option<BeforeFinishCallback>,
 }
 
 impl<'a> AnimationStepBuilder {
@@ -122,6 +143,7 @@ impl<'a> AnimationStepBuilder {
         AnimationActionAccumulator {
             target,
             actions: Vec::new(),
+            on_before_finish: None,
             step_builder: self,
         }
     }
@@ -129,6 +151,7 @@ impl<'a> AnimationStepBuilder {
     pub fn build(self) -> AnimationStep {
         AnimationStep {
             actions: self.actions,
+            on_before_finish: self.on_before_finish,
             duration: self.duration.unwrap_or_default(),
         }
     }
@@ -138,6 +161,7 @@ impl<'a> AnimationStepBuilder {
 pub struct AnimationActionAccumulator {
     target: AnimationTarget,
     actions: Vec<AnimationAction>,
+    on_before_finish: Option<BeforeFinishCallback>,
     step_builder: AnimationStepBuilder,
 }
 
@@ -177,10 +201,17 @@ impl<'a> AnimationActionAccumulator {
         self
     }
 
+    pub fn finish_with(mut self, callback: BeforeFinishCallback) -> Self {
+        self.on_before_finish = Some(callback);
+        self
+    }
+
     pub fn then(mut self) -> AnimationStepBuilder {
         self.step_builder
             .actions
             .extend([(self.target, self.actions)]);
+        self.step_builder.on_before_finish = self.on_before_finish;
+
         self.step_builder
     }
 }

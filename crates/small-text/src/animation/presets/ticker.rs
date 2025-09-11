@@ -67,7 +67,7 @@ impl<'a> Into<AnimationStyle> for TickerAnimationStyle<'a> {
                 actions.insert(target, vec![action]);
             }
 
-            let step = AnimationStep::new(actions, self.duration);
+            let step = AnimationStep::new(actions, None, self.duration);
             steps.push(step);
         }
 

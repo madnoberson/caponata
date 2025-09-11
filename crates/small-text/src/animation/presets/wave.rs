@@ -87,7 +87,7 @@ impl<'a> Into<AnimationStyle> for WaveAnimationStyle {
                 step_actions.insert(target, actions);
             }
 
-            let step = AnimationStep::new(step_actions, self.duration);
+            let step = AnimationStep::new(step_actions, None, self.duration);
             steps.push(step);
         }
 
