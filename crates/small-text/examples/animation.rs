@@ -153,7 +153,6 @@ fn make_texts(text: &str) -> Vec<(String, AnimatedSmallTextWidget<u16>)> {
 
 fn make_ticker_animated_text(text: &str) -> AnimatedSmallTextWidget<u16> {
     let animation_style = TickerAnimationStyleBuilder::default()
-        .with_text(text)
         .with_direction(TickerDirection::Forward)
         .with_duration(Duration::from_millis(100))
         .with_advance_mode(AnimationAdvanceMode::Auto)

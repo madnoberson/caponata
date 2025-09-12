@@ -1,21 +1,20 @@
 use std::{
-    collections::{
-        HashMap,
-        VecDeque,
-    },
+    collections::HashMap,
+    rc::Rc,
     time::Duration,
 };
 
+use caponata_common::Callable;
 use derive_builder::Builder;
 
 use crate::{
-    AnimationAction,
     AnimationAdvanceMode,
     AnimationRepeatMode,
-    AnimationStep,
+    AnimationStepBuilder,
     AnimationStyle,
     AnimationStyleBuilder,
-    AnimationTarget,
+    StepSymbolState,
+    Symbol,
 };
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
@@ -27,9 +26,7 @@ pub enum TickerDirection {
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Builder)]
 #[builder(setter(prefix = "with", into))]
-pub struct TickerAnimationStyle<'a> {
-    text: &'a str,
-
+pub struct TickerAnimationStyle {
     #[builder(default)]
     direction: TickerDirection,
 
@@ -43,38 +40,47 @@ pub struct TickerAnimationStyle<'a> {
     repeat_mode: AnimationRepeatMode,
 }
 
-impl<'a> Into<AnimationStyle> for TickerAnimationStyle<'a> {
+impl Into<AnimationStyle> for TickerAnimationStyle {
     fn into(self) -> AnimationStyle {
-        let mut steps: Vec<AnimationStep> = Vec::new();
-        let mut text_chars: VecDeque<char> = self.text.chars().collect();
-        let mut current_index = (self.text.chars().count() - 1) as i16;
+        let on_before_finish =
+            move |(step_states,): (HashMap<u16, StepSymbolState>,)| {
+                if step_states.is_empty() {
+                    return HashMap::new();
+                }
 
-        while current_index >= 0 {
-            if self.direction == TickerDirection::Forward {
-                let last_char = text_chars.pop_back().unwrap();
-                text_chars.push_front(last_char);
-            } else {
-                let last_char = text_chars.pop_front().unwrap();
-                text_chars.push_back(last_char);
+                let mut symbols: Vec<(u16, Symbol)> = step_states
+                    .into_iter()
+                    .map(|(x, state)| (x, state.symbol()))
+                    .collect();
+                symbols.sort_by(|a, b| a.0.cmp(&b.0));
+
+                if self.direction == TickerDirection::Forward {
+                    let last_symbol_index = symbols.iter().count() - 1;
+                    let last_symbol = symbols.remove(last_symbol_index);
+                    symbols.insert(0, last_symbol);
+                } else if self.direction == TickerDirection::Backward {
+                    let first_symbol = symbols.remove(0);
+                    symbols.push(first_symbol);
+                }
+
+                let mut updated_symbols: HashMap<u16, Symbol> = HashMap::new();
+                for (new_x, (_, symbol)) in symbols.iter().enumerate() {
+                    updated_symbols.insert(new_x as u16, *symbol);
+                }
+
+                updated_symbols
             };
-            current_index -= 1;
+        let on_before_finish = Callable::new(Rc::new(on_before_finish));
 
-            let mut actions: HashMap<AnimationTarget, Vec<AnimationAction>> =
-                HashMap::new();
-            for (char_index, char_value) in text_chars.iter().enumerate() {
-                let target = AnimationTarget::Single(char_index as u16);
-                let action = AnimationAction::UpdateCharacter(*char_value);
-                actions.insert(target, vec![action]);
-            }
-
-            let step = AnimationStep::new(actions, None, self.duration);
-            steps.push(step);
-        }
+        let step = AnimationStepBuilder::default()
+            .with_duration(self.duration)
+            .with_before_finish_callback(on_before_finish)
+            .build();
 
         return AnimationStyleBuilder::default()
             .with_advance_mode(self.advance_mode)
             .with_repeat_mode(self.repeat_mode)
-            .with_steps(steps)
+            .with_steps(vec![step])
             .build()
             .unwrap();
     }
