@@ -12,6 +12,7 @@ use caponata_small_text::{
     SmallTextStyleBuilder,
     TickerAnimationStyleBuilder,
     TickerDirection,
+    WaveAnimationStyleBuilder,
 };
 use crossterm::event::{
     Event,
@@ -70,7 +71,7 @@ impl Widget for &mut AppWidget {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let base_layout = Layout::default()
             .direction(Direction::Horizontal)
-            .constraints([Constraint::Max(80), Constraint::Fill(1)])
+            .constraints([Constraint::Max(85), Constraint::Fill(1)])
             .split(area)[0];
         let row_layout_constraints: Vec<[Constraint; 4]> =
             (0..self.text_count.div_ceil(4))
@@ -144,10 +145,12 @@ impl AppWidget {
 fn make_texts(text: &str) -> Vec<(String, AnimatedSmallTextWidget<u16>)> {
     let ticker_animated_text = make_ticker_animated_text(text);
     let scanner_animated_text = make_scanner_animated_text(text);
+    let wave_animated_text = make_wave_animated_text(text);
 
     Vec::from([
         ("Ticker".to_string(), ticker_animated_text),
         ("Scanner".to_string(), scanner_animated_text),
+        ("Wave".to_string(), wave_animated_text),
     ])
 }
 
@@ -171,6 +174,23 @@ fn make_scanner_animated_text(text: &str) -> AnimatedSmallTextWidget<u16> {
     let text_style = SmallTextStyleBuilder::default().with_text(text).build();
 
     let animation_style = ScannerAnimationStyleBuilder::default()
+        .with_text_style(&text_style)
+        .with_duration(Duration::from_millis(100))
+        .with_foreground_color(Color::Red)
+        .with_advance_mode(AnimationAdvanceMode::Auto)
+        .with_repeat_mode(AnimationRepeatMode::Infinite)
+        .build()
+        .unwrap()
+        .into();
+    let animation_styles = HashMap::from([(0, animation_style)]);
+
+    AnimatedSmallTextWidget::new(text_style, animation_styles)
+}
+
+fn make_wave_animated_text(text: &str) -> AnimatedSmallTextWidget<u16> {
+    let text_style = SmallTextStyleBuilder::default().with_text(text).build();
+
+    let animation_style = WaveAnimationStyleBuilder::default()
         .with_text_style(&text_style)
         .with_duration(Duration::from_millis(100))
         .with_foreground_color(Color::Red)
