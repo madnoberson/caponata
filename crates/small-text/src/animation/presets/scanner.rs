@@ -27,7 +27,7 @@ use crate::{
 
 #[derive(Debug, Clone, PartialEq, Eq, Builder)]
 #[builder(setter(prefix = "with", into, strip_option))]
-pub struct WaveAnimationStyle<'a> {
+pub struct ScannerAnimationStyle<'a> {
     text_style: &'a SmallTextStyle<'a>,
 
     #[builder(default)]
@@ -46,7 +46,7 @@ pub struct WaveAnimationStyle<'a> {
     repeat_mode: AnimationRepeatMode,
 }
 
-impl<'a> Into<AnimationStyle> for WaveAnimationStyle<'a> {
+impl<'a> Into<AnimationStyle> for ScannerAnimationStyle<'a> {
     fn into(self) -> AnimationStyle {
         let mut steps: Vec<AnimationStep> = Vec::new();
 
@@ -68,6 +68,24 @@ impl<'a> Into<AnimationStyle> for WaveAnimationStyle<'a> {
                         return HashMap::new();
                     }
                     let mut updated_symbols = HashMap::new();
+
+                    let (old_head_symbol_x, old_tail_symbol_x) = if x == 0 {
+                        (
+                            text_char_count.saturating_sub(1),
+                            text_char_count.saturating_sub(2),
+                        )
+                    } else {
+                        (x - 1, x.saturating_sub(2))
+                    };
+                    let old_head_symbol = if let Some(symbol) =
+                        symbols.get(&old_head_symbol_x)
+                    {
+                        symbol
+                    } else {
+                        return HashMap::new();
+                    };
+                    updated_symbols
+                        .insert(old_head_symbol_x, *old_head_symbol);
 
                     let symbol_at_head_position =
                         if let Some(symbol) = symbols.get(&x) {
@@ -93,24 +111,6 @@ impl<'a> Into<AnimationStyle> for WaveAnimationStyle<'a> {
                     );
                     updated_symbols.insert(x, head_symbol);
 
-                    let (old_head_symbol_x, old_tail_symbol_x) = if x == 0 {
-                        (
-                            text_char_count.saturating_sub(1),
-                            text_char_count.saturating_sub(2),
-                        )
-                    } else {
-                        (x - 1, x.saturating_sub(2))
-                    };
-                    let old_head_symbol = if let Some(symbol) =
-                        symbols.get(&old_head_symbol_x)
-                    {
-                        symbol
-                    } else {
-                        return HashMap::new();
-                    };
-                    updated_symbols
-                        .insert(old_head_symbol_x, *old_head_symbol);
-
                     let old_tail_symbol = if let Some(symbol) =
                         symbols.get(&old_tail_symbol_x)
                     {
@@ -121,7 +121,7 @@ impl<'a> Into<AnimationStyle> for WaveAnimationStyle<'a> {
                     updated_symbols
                         .insert(old_tail_symbol_x, *old_tail_symbol);
 
-                    if x < 2 {
+                    if x < 1 {
                         return updated_symbols;
                     }
 

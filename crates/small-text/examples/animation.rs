@@ -8,10 +8,10 @@ use caponata_small_text::{
     AnimatedSmallTextWidget,
     AnimationAdvanceMode,
     AnimationRepeatMode,
+    ScannerAnimationStyleBuilder,
     SmallTextStyleBuilder,
     TickerAnimationStyleBuilder,
     TickerDirection,
-    WaveAnimationStyleBuilder,
 };
 use crossterm::event::{
     Event,
@@ -143,11 +143,11 @@ impl AppWidget {
 
 fn make_texts(text: &str) -> Vec<(String, AnimatedSmallTextWidget<u16>)> {
     let ticker_animated_text = make_ticker_animated_text(text);
-    let wave_animated_text = make_wave_animated_text(text);
+    let scanner_animated_text = make_scanner_animated_text(text);
 
     Vec::from([
         ("Ticker".to_string(), ticker_animated_text),
-        ("Wave".to_string(), wave_animated_text),
+        ("Scanner".to_string(), scanner_animated_text),
     ])
 }
 
@@ -167,10 +167,10 @@ fn make_ticker_animated_text(text: &str) -> AnimatedSmallTextWidget<u16> {
     AnimatedSmallTextWidget::new(text_style, animation_styles)
 }
 
-fn make_wave_animated_text(text: &str) -> AnimatedSmallTextWidget<u16> {
+fn make_scanner_animated_text(text: &str) -> AnimatedSmallTextWidget<u16> {
     let text_style = SmallTextStyleBuilder::default().with_text(text).build();
 
-    let animation_style = WaveAnimationStyleBuilder::default()
+    let animation_style = ScannerAnimationStyleBuilder::default()
         .with_text_style(&text_style)
         .with_duration(Duration::from_millis(100))
         .with_foreground_color(Color::Red)
