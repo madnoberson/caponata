@@ -152,6 +152,8 @@ fn make_texts(text: &str) -> Vec<(String, AnimatedSmallTextWidget<u16>)> {
 }
 
 fn make_ticker_animated_text(text: &str) -> AnimatedSmallTextWidget<u16> {
+    let text_style = SmallTextStyleBuilder::default().with_text(text).build();
+
     let animation_style = TickerAnimationStyleBuilder::default()
         .with_direction(TickerDirection::Forward)
         .with_duration(Duration::from_millis(100))
@@ -160,16 +162,16 @@ fn make_ticker_animated_text(text: &str) -> AnimatedSmallTextWidget<u16> {
         .build()
         .unwrap()
         .into();
-
     let animation_styles = HashMap::from([(0, animation_style)]);
-    let text_style = SmallTextStyleBuilder::default().with_text(text).build();
 
     AnimatedSmallTextWidget::new(text_style, animation_styles)
 }
 
 fn make_wave_animated_text(text: &str) -> AnimatedSmallTextWidget<u16> {
+    let text_style = SmallTextStyleBuilder::default().with_text(text).build();
+
     let animation_style = WaveAnimationStyleBuilder::default()
-        .with_text_char_count(text.chars().count() as u16)
+        .with_text_style(&text_style)
         .with_duration(Duration::from_millis(100))
         .with_foreground_color(Color::Red)
         .with_advance_mode(AnimationAdvanceMode::Auto)
@@ -177,9 +179,7 @@ fn make_wave_animated_text(text: &str) -> AnimatedSmallTextWidget<u16> {
         .build()
         .unwrap()
         .into();
-
     let animation_styles = HashMap::from([(0, animation_style)]);
-    let text_style = SmallTextStyleBuilder::default().with_text(text).build();
 
     AnimatedSmallTextWidget::new(text_style, animation_styles)
 }

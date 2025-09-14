@@ -63,10 +63,10 @@ pub struct AnimationStep {
     pub(crate) actions: HashMap<AnimationTarget, Vec<AnimationAction>>,
 
     /// Callback that is called before finishing step
-    /// processing. The function receives a map of
+    /// processing. The function receives a map of the
     /// symbol positions to their corresponding states
-    /// and should return map of updated symbol
-    /// positions to their corresponding updated symbols.
+    /// and should return map of updated symbol positions
+    /// to their corresponding updated symbols.
     pub(crate) on_before_finish: Option<BeforeFinishCallback>,
 
     /// The duration of this animation step. Once this

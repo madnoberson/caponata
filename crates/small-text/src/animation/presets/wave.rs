@@ -1,8 +1,10 @@
 use std::{
     collections::HashMap,
+    rc::Rc,
     time::Duration,
 };
 
+use caponata_common::Callable;
 use derive_builder::Builder;
 use ratatui::style::{
     Color,
@@ -10,19 +12,23 @@ use ratatui::style::{
 };
 
 use crate::{
-    AnimationAction,
     AnimationAdvanceMode,
     AnimationRepeatMode,
     AnimationStep,
+    AnimationStepBuilder,
     AnimationStyle,
     AnimationStyleBuilder,
-    AnimationTarget,
+    SmallTextStyle,
+    StepSymbolState,
+    Symbol,
+    SymbolStyleBuilder,
+    create_symbols,
 };
 
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Builder)]
+#[derive(Debug, Clone, PartialEq, Eq, Builder)]
 #[builder(setter(prefix = "with", into, strip_option))]
-pub struct WaveAnimationStyle {
-    text_char_count: u16,
+pub struct WaveAnimationStyle<'a> {
+    text_style: &'a SmallTextStyle<'a>,
 
     #[builder(default)]
     duration: Duration,
@@ -40,54 +46,119 @@ pub struct WaveAnimationStyle {
     repeat_mode: AnimationRepeatMode,
 }
 
-impl<'a> Into<AnimationStyle> for WaveAnimationStyle {
+impl<'a> Into<AnimationStyle> for WaveAnimationStyle<'a> {
     fn into(self) -> AnimationStyle {
         let mut steps: Vec<AnimationStep> = Vec::new();
 
-        for i in 0..self.text_char_count {
-            let mut step_actions = HashMap::new();
+        let foreground_color = self.foreground_color;
+        let background_color = self.background_color;
 
-            {
-                let target = AnimationTarget::UntouchedThisStep;
-                let actions = vec![
-                    AnimationAction::UpdateForegroundColor(Color::White),
-                    AnimationAction::RemoveAllModifiers,
-                ];
-                step_actions.insert(target, actions);
-            }
+        let text_symbols = create_symbols(
+            self.text_style.text,
+            self.text_style.symbol_styles.clone(),
+        );
+        let text_char_count = self.text_style.text.chars().count() as u16;
 
-            {
-                let target = AnimationTarget::Single(i);
-                let mut actions = Vec::with_capacity(2);
+        for x in 0..text_char_count {
+            let symbols = text_symbols.clone();
 
-                if let Some(color) = self.foreground_color {
-                    let action = AnimationAction::UpdateForegroundColor(color);
-                    actions.push(action);
-                }
-                if let Some(color) = self.background_color {
-                    let action = AnimationAction::UpdateBackgroundColor(color);
-                    actions.push(action);
-                }
-                step_actions.insert(target, actions);
-            }
+            let on_before_finish =
+                move |(step_states,): (HashMap<u16, StepSymbolState>,)| {
+                    if step_states.is_empty() {
+                        return HashMap::new();
+                    }
+                    let mut updated_symbols = HashMap::new();
 
-            if i.saturating_sub(1) != 0 {
-                let target = AnimationTarget::Single(i - 1);
-                let mut actions =
-                    vec![AnimationAction::AddModifier(Modifier::DIM)];
+                    let symbol_at_head_position =
+                        if let Some(symbol) = symbols.get(&x) {
+                            symbol
+                        } else {
+                            return HashMap::new();
+                        };
 
-                if let Some(color) = self.foreground_color {
-                    let action = AnimationAction::UpdateForegroundColor(color);
-                    actions.push(action);
-                }
-                if let Some(color) = self.background_color {
-                    let action = AnimationAction::UpdateBackgroundColor(color);
-                    actions.push(action);
-                }
-                step_actions.insert(target, actions);
-            }
+                    let head_symbol_foreground_color = foreground_color
+                        .unwrap_or(symbol_at_head_position.foreground_color);
+                    let head_symbol_background_color = background_color
+                        .unwrap_or(symbol_at_head_position.background_color);
+                    let head_symbol_style = SymbolStyleBuilder::default()
+                        .with_foreground_color(head_symbol_foreground_color)
+                        .with_background_color(head_symbol_background_color)
+                        .with_modifier(symbol_at_head_position.modifier)
+                        .build()
+                        .unwrap();
 
-            let step = AnimationStep::new(step_actions, None, self.duration);
+                    let head_symbol = Symbol::new(
+                        symbol_at_head_position.value,
+                        head_symbol_style,
+                    );
+                    updated_symbols.insert(x, head_symbol);
+
+                    let (old_head_symbol_x, old_tail_symbol_x) = if x == 0 {
+                        (
+                            text_char_count.saturating_sub(1),
+                            text_char_count.saturating_sub(2),
+                        )
+                    } else {
+                        (x - 1, x.saturating_sub(2))
+                    };
+                    let old_head_symbol = if let Some(symbol) =
+                        symbols.get(&old_head_symbol_x)
+                    {
+                        symbol
+                    } else {
+                        return HashMap::new();
+                    };
+                    updated_symbols
+                        .insert(old_head_symbol_x, *old_head_symbol);
+
+                    let old_tail_symbol = if let Some(symbol) =
+                        symbols.get(&old_tail_symbol_x)
+                    {
+                        symbol
+                    } else {
+                        return HashMap::new();
+                    };
+                    updated_symbols
+                        .insert(old_tail_symbol_x, *old_tail_symbol);
+
+                    if x < 2 {
+                        return updated_symbols;
+                    }
+
+                    let symbol_at_tail_position =
+                        if let Some(symbol) = symbols.get(&(x - 1)) {
+                            symbol
+                        } else {
+                            return HashMap::new();
+                        };
+
+                    let tail_symbol_foreground_color = foreground_color
+                        .unwrap_or(symbol_at_tail_position.foreground_color);
+                    let tail_symbol_background_color = background_color
+                        .unwrap_or(symbol_at_tail_position.background_color);
+                    let tail_symbol_modifier =
+                        symbol_at_tail_position.modifier.union(Modifier::DIM);
+                    let tail_symbol_style = SymbolStyleBuilder::default()
+                        .with_foreground_color(tail_symbol_foreground_color)
+                        .with_background_color(tail_symbol_background_color)
+                        .with_modifier(tail_symbol_modifier)
+                        .build()
+                        .unwrap();
+
+                    let tail_symbol = Symbol::new(
+                        symbol_at_tail_position.value,
+                        tail_symbol_style,
+                    );
+                    updated_symbols.insert(x - 1, tail_symbol);
+
+                    updated_symbols
+                };
+            let on_before_finish = Callable::new(Rc::new(on_before_finish));
+
+            let step = AnimationStepBuilder::default()
+                .with_duration(self.duration)
+                .with_before_finish_callback(on_before_finish)
+                .build();
             steps.push(step);
         }
 

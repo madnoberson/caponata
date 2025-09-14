@@ -248,7 +248,7 @@ impl SmallTextWidget {
     }
 }
 
-fn create_symbols(
+pub(crate) fn create_symbols(
     text: &str,
     symbol_styles: HashMap<Target, SymbolStyle>,
 ) -> HashMap<u16, Symbol> {
