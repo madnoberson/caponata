@@ -1,6 +1,6 @@
 use std::{
     collections::HashMap,
-    rc::Rc,
+    sync::Arc,
     time::Duration,
 };
 
@@ -17,18 +17,46 @@ use crate::{
     Symbol,
 };
 
+/// Direction of the ticker animation movement.
+///
+/// Default variant is [`TickerAnimationDirection::Forward`].
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum TickerDirection {
+pub enum TickerAnimationDirection {
     #[default]
     Forward,
     Backward,
 }
 
+/// A styling configuration for the ticker animation.
+///
+/// # Example
+///
+/// ```rust
+/// use std::time::Duration;
+///
+/// use caponata_small_text::{
+///     AnimationStyle,
+///     AnimationAdvanceMode,
+///     AnimationRepeatMode,
+///     TickerAnimationDirection,
+///     TickerAnimationStyleBuilder,
+/// };
+///
+/// let animation_style: AnimationStyle =
+///     TickerAnimationStyleBuilder::default()
+///         .with_direction(TickerDirection::Forward)
+///         .with_duration(Duration::from_millis(100))
+///         .with_advance_mode(AnimationAdvanceMode::Auto)
+///         .with_repeat_mode(AnimationRepeatMode::Infinite)
+///         .build()
+///         .unwrap()
+///         .into();
+/// ```
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Builder)]
 #[builder(setter(prefix = "with", into))]
 pub struct TickerAnimationStyle {
     #[builder(default)]
-    direction: TickerDirection,
+    direction: TickerAnimationDirection,
 
     #[builder(default)]
     duration: Duration,
@@ -54,11 +82,11 @@ impl Into<AnimationStyle> for TickerAnimationStyle {
                     .collect();
                 symbols.sort_by(|a, b| a.0.cmp(&b.0));
 
-                if self.direction == TickerDirection::Forward {
+                if self.direction == TickerAnimationDirection::Forward {
                     let last_symbol_index = symbols.iter().count() - 1;
                     let last_symbol = symbols.remove(last_symbol_index);
                     symbols.insert(0, last_symbol);
-                } else if self.direction == TickerDirection::Backward {
+                } else {
                     let first_symbol = symbols.remove(0);
                     symbols.push(first_symbol);
                 }
@@ -70,7 +98,9 @@ impl Into<AnimationStyle> for TickerAnimationStyle {
 
                 updated_symbols
             };
-        let on_before_finish = Callable::new(Rc::new(on_before_finish));
+
+        let on_before_finish = Arc::new(on_before_finish);
+        let on_before_finish = Callable::new(on_before_finish);
 
         let step = AnimationStepBuilder::default()
             .with_duration(self.duration)

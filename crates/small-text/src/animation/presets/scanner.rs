@@ -1,6 +1,6 @@
 use std::{
     collections::HashMap,
-    rc::Rc,
+    sync::Arc,
     time::Duration,
 };
 
@@ -108,7 +108,9 @@ impl<'a> Into<AnimationStyle> for ScannerAnimationStyle<'a> {
 
                     updated_symbols
                 };
-            let on_before_finish = Callable::new(Rc::new(on_before_finish));
+
+            let on_before_finish = Arc::new(on_before_finish);
+            let on_before_finish = Callable::new(on_before_finish);
 
             let step = AnimationStepBuilder::default()
                 .with_duration(self.duration)
@@ -169,7 +171,9 @@ impl<'a> Into<AnimationStyle> for ScannerAnimationStyle<'a> {
 
                     updated_symbols
                 };
-            let on_before_finish = Callable::new(Rc::new(on_before_finish));
+
+            let on_before_finish = Arc::new(on_before_finish);
+            let on_before_finish = Callable::new(on_before_finish);
 
             let step = AnimationStepBuilder::default()
                 .with_duration(self.duration)

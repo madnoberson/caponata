@@ -10,8 +10,8 @@ use caponata_small_text::{
     AnimationRepeatMode,
     ScannerAnimationStyleBuilder,
     SmallTextStyleBuilder,
+    TickerAnimationDirection,
     TickerAnimationStyleBuilder,
-    TickerDirection,
     WaveAnimationStyleBuilder,
 };
 use crossterm::event::{
@@ -158,7 +158,7 @@ fn make_ticker_animated_text(text: &str) -> AnimatedSmallTextWidget<u16> {
     let text_style = SmallTextStyleBuilder::default().with_text(text).build();
 
     let animation_style = TickerAnimationStyleBuilder::default()
-        .with_direction(TickerDirection::Forward)
+        .with_direction(TickerAnimationDirection::Forward)
         .with_duration(Duration::from_millis(100))
         .with_advance_mode(AnimationAdvanceMode::Auto)
         .with_repeat_mode(AnimationRepeatMode::Infinite)

@@ -5,14 +5,14 @@ use std::{
         Hasher,
     },
     marker::Tuple,
-    rc::Rc,
+    sync::Arc,
 };
 
 use uuid::Uuid;
 
 pub struct Callable<Args: Tuple, R> {
     id: Uuid,
-    function: Rc<dyn Fn(Args) -> R>,
+    function: Arc<dyn Fn(Args) -> R>,
 }
 
 impl<Args: Tuple, R> fmt::Debug for Callable<Args, R> {
@@ -45,7 +45,7 @@ impl<Args: Tuple, R> Hash for Callable<Args, R> {
 }
 
 impl<Args: Tuple, R> Callable<Args, R> {
-    pub fn new(function: Rc<dyn Fn(Args) -> R>) -> Self {
+    pub fn new(function: Arc<dyn Fn(Args) -> R>) -> Self {
         Self {
             id: Uuid::new_v4(),
             function: function,
